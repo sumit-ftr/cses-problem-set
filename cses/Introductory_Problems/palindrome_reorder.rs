@@ -22,7 +22,7 @@ fn main() {
         let mut odd_index: usize = 26;
         for i in 0..26 {
             if a[i]&1 == 0 {
-                a[i] /= 2;
+                a[i] >>= 1;
                 for _ in 0..a[i] {
                     print!("{}", char::from_u32(i as u32+65).unwrap());
                 }

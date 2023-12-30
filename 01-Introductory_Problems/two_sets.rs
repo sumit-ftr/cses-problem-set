@@ -1,13 +1,13 @@
 fn main() {
     let mut token = Tokenizer::new();
-    let n: u32 = token.next();
-    let sum: u128 = ((n as f64/2.0) * (n as f64 + 1.0)) as u128;
+    let n: usize = token.next();
+    let sum: u128 = (n*(n+1)/2) as u128;
     if sum&1 == 0 {
         println!("YES");
         let mut sum2: u128 = 0;
-        let mut v1: Vec<u32> = Vec::with_capacity((n/4) as usize);
-        let mut v2: Vec<u32> = Vec::with_capacity((n/2) as usize);
-        for i in (1..=n).rev() {
+        let mut v1: Vec<u32> = Vec::with_capacity(n/4);
+        let mut v2: Vec<u32> = Vec::with_capacity(n/2);
+        for i in (1..=n as u32).rev() {
             if sum2 + i as u128 <= sum/2 {
                 sum2 += i as u128;
                 v1.push(i);

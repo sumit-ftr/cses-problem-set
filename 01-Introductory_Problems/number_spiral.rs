@@ -5,7 +5,7 @@ fn main() {
         let x: u32 = token.next();
         let y: u32 = token.next();
         let result: u128;
-        let max: u128 = if x > y { x as u128 } else { y as u128 };
+        let max: u128 = u128::max(x, y);
         // (max-1)^2 .. max^2
         if max&1 == 0 {
             // starts from upside
@@ -22,7 +22,7 @@ fn main() {
                 result = u128::pow(max, 2) - (x-1) as u128;
             }
         }
-        println!("{}", result);
+        println!("{result}");
     }
 }
 

@@ -1,27 +1,21 @@
 fn main() {
     let mut token = Tokenizer::new();
     let n: usize = token.next();
-    if n == 2 || n == 3 {
-        println!("NO SOLUTION");
-    } else if n == 1 {
+    if n == 1 {
         println!("1");
+    } else if n == 2 || n == 3 {
+        println!("NO SOLUTION");
     } else {
-        let mut v: Vec<u32> = Vec::with_capacity(n);
-        v.push(2);
-        for i in 1..n/2 {
-            v.push(v[i-1] + 2);
+        for i in 0..n/2 {
+            print!("{} ", i*2+2);
         }
         for i in 0..n/2 {
-            v.push((i*2+1) as u32);
+            print!("{} ", i*2+1);
         }
         if n&1 == 1 {
-            v.push(n as u32);
+            print!("{} ", n);
         }
-
         println!();
-        for i in 0..n {
-            print!("{} ", v[i]);
-        }
     }
 }
 

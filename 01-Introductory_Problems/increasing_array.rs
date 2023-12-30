@@ -1,17 +1,12 @@
 fn main() {
     let mut token = Tokenizer::new();
     let n: usize = token.next();
-    let mut v: Vec<u32> = Vec::with_capacity(n);
+    let mut mx: usize = 0;
+    let mut cost: usize = 0;
     for _ in 0..n {
-        v.push(token.next());
-    }
-
-    let mut cost: u128 = 0;
-    for i in 1..n {
-        if v[i] < v[i-1] {
-            cost += (v[i-1] - v[i]) as u128;
-            v[i] = v[i-1];
-        }
+        let x: usize = token.next();
+        mx = usize::max(x, mx);
+        cost += mx - x;
     }
     println!("{}", cost);
 }

@@ -1,6 +1,40 @@
 fn main() {
     let mut token = Tokenizer::new();
     let n: usize = token.next();
+    if n&3 == 1 || n&3 == 2 {
+        println!("NO");
+    } else {
+        println!("YES");
+        if n&3==0 {
+            println!("{}", n/2);
+            for i in (1..=n).step_by(4) {
+                print!("{} {} ", i, i+3);
+            }
+            println!("\n{}", n/2);
+            for i in (1..=n).step_by(4) {
+                print!("{} {} ", i+1, i+2);
+            }
+            println!("");
+        } else {
+            println!("{}", (n+1)/2);
+            print!("1 2 ");
+            for i in (4..=n).step_by(4) {
+                print!("{} {} ", i, i+3);
+            }
+            println!("\n{}", n/2);
+            print!("3 ");
+            for i in (4..=n).step_by(4) {
+                print!("{} {} ", i+1, i+2);
+            }
+            println!("");
+        }
+    }
+}
+
+/*
+fn main() {
+    let mut token = Tokenizer::new();
+    let n: usize = token.next();
     let sum: u128 = (n*(n+1)/2) as u128;
     if sum&1 == 0 {
         println!("YES");
@@ -30,6 +64,7 @@ fn main() {
         println!("NO");
     }
 }
+*/
 
 struct Tokenizer {
     buf: Vec<String>,

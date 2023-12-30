@@ -1,5 +1,17 @@
 fn main() {
     let mut token = Tokenizer::new();
+    let n: u128 = token.next();
+    let mut sum: u128 = n*(n+1)/2;
+    for _ in 1..n {
+        let val: u32 = token.next();
+        sum -= val as u128;
+    }
+    println!("{}", sum);
+}
+
+/*
+fn main() {
+    let mut token = Tokenizer::new();
     let n: usize = token.next();
     let l: usize = f64::ceil(n as f64/128.0) as usize;
     let mut v: Vec<u128> = Vec::with_capacity(l);
@@ -25,6 +37,7 @@ fn main() {
         }
     }
 }
+*/
 
 struct Tokenizer {
     buf: Vec<String>,

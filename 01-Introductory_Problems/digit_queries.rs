@@ -6,7 +6,6 @@ fn main() {
         v.push(v[i-1] + i*9 * usize::pow(10, i as u32-1));
     }
 
-    // println!("{:?}", v);
     let t: u16 = token.next();
     for _ in 0..t {
         let k: usize = token.next();
@@ -14,13 +13,14 @@ fn main() {
         while v[i] < k {
             i += 1;
         }
+
         // 10^i-1 <= k < 10^i
         let mut num: usize = (k - v[i-1] + (i-1)) / i;
         if i != 1 {
             num += usize::pow(10, i as u32-1) - 1;
         }
+
         let div: usize = (k - v[i-1]) % i;
-        // print!("{num} {i} {div} ");
         if div == 0 {
             println!("{}", num%10);
         } else {

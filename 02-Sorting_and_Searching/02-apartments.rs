@@ -1,18 +1,35 @@
-use std::collections::HashSet;
-
 fn main() {
     let mut token = Tokenizer::new();
     let n: usize = token.next();
-    let mut h: HashSet<u32> = HashSet::with_capacity(n);
-    let mut unique: u32 = 0;
+    let m: usize = token.next();
+    let k: u32 = token.next();
+    let mut applicants: Vec<u32> = Vec::with_capacity(n);
+    let mut apartments: Vec<u32> = Vec::with_capacity(m);
     for _ in 0..n {
-        let val: u32 = token.next();
-        if h.get(&val) == None {
-            h.insert(val);
-            unique += 1;
+        applicants.push(token.next());
+    }
+    for _ in 0..m {
+        apartments.push(token.next());
+    }
+    applicants.sort();
+    apartments.sort();
+    
+    let mut reserved: u32 = 0;
+    let mut i: usize = 0;
+    let mut j: usize = 0;
+    while i<n && j<m {
+        if applicants[i] as i64 - k as i64 <= apartments[j] as i64
+        && apartments[j] <= applicants[i] + k {
+            i += 1;
+            j += 1;
+            reserved += 1;
+        } else if applicants[i] as i64 - k as i64 > apartments[j] as i64 {
+            j += 1;
+        } else {
+            i += 1;
         }
     }
-    println!("{unique}");
+    println!("{reserved}");
 }
 
 struct Tokenizer {

@@ -8,8 +8,8 @@ fn main() {
     for _ in 0..n {
         let x: i32 = token.next();
         let y: i32 = token.next();
-        map.entry(x).and_modify(|k| *k+=1).or_insert(1);
-        map.entry(y).and_modify(|k| *k-=1).or_insert(-1);
+        map.entry(x).and_modify(|k| *k += 1).or_insert(1);
+        map.entry(y).and_modify(|k| *k -= 1).or_insert(-1);
     }
     let mut mc: i32 = 0;
     let mut cc: i32 = 0;
@@ -25,12 +25,15 @@ fn main() {
 
 struct Tokenizer {
     buf: Vec<String>,
-    i: usize
+    i: usize,
 }
 
 impl Tokenizer {
     pub fn new() -> Self {
-        return Tokenizer { buf: Vec::<String>::new(), i: 0 };
+        return Tokenizer {
+            buf: Vec::<String>::new(),
+            i: 0,
+        };
     }
 
     fn read_line(&mut self) {
@@ -40,8 +43,10 @@ impl Tokenizer {
         self.i = 0;
     }
 
-    pub fn next<T : std::str::FromStr>(&mut self) -> T
-    where T::Err : std::fmt::Debug {
+    pub fn next<T: std::str::FromStr>(&mut self) -> T
+    where
+        T::Err: std::fmt::Debug,
+    {
         while self.i == self.buf.len() {
             self.read_line();
         }

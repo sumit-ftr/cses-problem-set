@@ -3,7 +3,7 @@ fn main() {
     let mut v: Vec<usize> = Vec::with_capacity(19);
     v.push(0);
     for i in 1..=18 {
-        v.push(v[i-1] + i*9 * usize::pow(10, i as u32-1));
+        v.push(v[i - 1] + i * 9 * usize::pow(10, i as u32 - 1));
     }
 
     let t: u16 = token.next();
@@ -15,16 +15,16 @@ fn main() {
         }
 
         // 10^i-1 <= k < 10^i
-        let mut num: usize = (k - v[i-1] + (i-1)) / i;
+        let mut num: usize = (k - v[i - 1] + (i - 1)) / i;
         if i != 1 {
-            num += usize::pow(10, i as u32-1) - 1;
+            num += usize::pow(10, i as u32 - 1) - 1;
         }
 
-        let div: usize = (k - v[i-1]) % i;
+        let div: usize = (k - v[i - 1]) % i;
         if div == 0 {
-            println!("{}", num%10);
+            println!("{}", num % 10);
         } else {
-            let res: usize = (num / usize::pow(10, (i-div) as u32)) % 10;
+            let res: usize = (num / usize::pow(10, (i - div) as u32)) % 10;
             println!("{}", res);
         }
     }
@@ -32,12 +32,15 @@ fn main() {
 
 struct Tokenizer {
     buf: Vec<String>,
-    i: usize
+    i: usize,
 }
 
 impl Tokenizer {
     pub fn new() -> Self {
-        return Tokenizer { buf: Vec::<String>::new(), i: 0 };
+        return Tokenizer {
+            buf: Vec::<String>::new(),
+            i: 0,
+        };
     }
 
     fn read_line(&mut self) {
@@ -47,8 +50,10 @@ impl Tokenizer {
         self.i = 0;
     }
 
-    pub fn next<T : std::str::FromStr>(&mut self) -> T
-    where T::Err : std::fmt::Debug {
+    pub fn next<T: std::str::FromStr>(&mut self) -> T
+    where
+        T::Err: std::fmt::Debug,
+    {
         while self.i == self.buf.len() {
             self.read_line();
         }
@@ -64,4 +69,3 @@ impl Tokenizer {
         return s;
     }
 }
-

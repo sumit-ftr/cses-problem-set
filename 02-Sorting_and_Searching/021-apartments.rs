@@ -13,13 +13,14 @@ fn main() {
     }
     applicants.sort();
     apartments.sort();
-    
+
     let mut reserved: u32 = 0;
     let mut i: usize = 0;
     let mut j: usize = 0;
-    while i<n && j<m {
+    while i < n && j < m {
         if applicants[i] as i64 - k as i64 <= apartments[j] as i64
-        && apartments[j] <= applicants[i] + k {
+            && apartments[j] <= applicants[i] + k
+        {
             i += 1;
             j += 1;
             reserved += 1;
@@ -34,12 +35,15 @@ fn main() {
 
 struct Tokenizer {
     buf: Vec<String>,
-    i: usize
+    i: usize,
 }
 
 impl Tokenizer {
     pub fn new() -> Self {
-        return Tokenizer { buf: Vec::<String>::new(), i: 0 };
+        return Tokenizer {
+            buf: Vec::<String>::new(),
+            i: 0,
+        };
     }
 
     fn read_line(&mut self) {
@@ -49,8 +53,10 @@ impl Tokenizer {
         self.i = 0;
     }
 
-    pub fn next<T : std::str::FromStr>(&mut self) -> T
-    where T::Err : std::fmt::Debug {
+    pub fn next<T: std::str::FromStr>(&mut self) -> T
+    where
+        T::Err: std::fmt::Debug,
+    {
         while self.i == self.buf.len() {
             self.read_line();
         }
@@ -66,4 +72,3 @@ impl Tokenizer {
         return s;
     }
 }
-

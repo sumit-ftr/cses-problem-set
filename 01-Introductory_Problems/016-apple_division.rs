@@ -10,10 +10,10 @@ fn divide(v: &[u32], i: usize, s1: u64, s2: u64, mid: u64) -> u64 {
     let mut d1: u64 = u64::MAX;
     let mut d2: u64 = u64::MAX;
     if s1 < mid {
-        d1 = u64::min(d1, divide(v, i+1, s1+v[i] as u64, s2, mid));
+        d1 = u64::min(d1, divide(v, i + 1, s1 + v[i] as u64, s2, mid));
     }
     if s2 < mid {
-        d2 = u64::min(d2, divide(v, i+1, s1, s2+v[i] as u64, mid));
+        d2 = u64::min(d2, divide(v, i + 1, s1, s2 + v[i] as u64, mid));
     }
     return u64::min(d1, d2);
 }
@@ -32,19 +32,22 @@ fn main() {
         println!("{}", v[0]);
     } else {
         // let diff: u64 = divide(&v, 0, 0, 0, sum.div_ceil(2));
-        let diff: u64 = divide(&v, 0, 0, 0, (sum+1)/2);
+        let diff: u64 = divide(&v, 0, 0, 0, (sum + 1) / 2);
         println!("{diff}");
     }
 }
 
 struct Tokenizer {
     buf: Vec<String>,
-    i: usize
+    i: usize,
 }
 
 impl Tokenizer {
     pub fn new() -> Self {
-        return Tokenizer { buf: Vec::<String>::new(), i: 0 };
+        return Tokenizer {
+            buf: Vec::<String>::new(),
+            i: 0,
+        };
     }
 
     fn read_line(&mut self) {
@@ -54,8 +57,10 @@ impl Tokenizer {
         self.i = 0;
     }
 
-    pub fn next<T : std::str::FromStr>(&mut self) -> T
-    where T::Err : std::fmt::Debug {
+    pub fn next<T: std::str::FromStr>(&mut self) -> T
+    where
+        T::Err: std::fmt::Debug,
+    {
         while self.i == self.buf.len() {
             self.read_line();
         }
@@ -71,4 +76,3 @@ impl Tokenizer {
         return s;
     }
 }
-

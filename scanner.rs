@@ -1,14 +1,14 @@
 fn main() {
-    let mut scanner = UnsafeScanner::new(std::io::stdin().lock());
+    let mut sc = Scanner::new(std::io::stdin().lock());
 }
 
-pub struct UnsafeScanner<R> {
+pub struct Scanner<R> {
     reader: R,
     buf_str: Vec<u8>,
     buf_iter: std::str::SplitAsciiWhitespace<'static>,
 }
 
-impl<R: std::io::BufRead> UnsafeScanner<R> {
+impl<R: std::io::BufRead> Scanner<R> {
     pub fn new(reader: R) -> Self {
         Self {
             reader,

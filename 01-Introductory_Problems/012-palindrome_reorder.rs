@@ -10,7 +10,7 @@ fn main() {
     // pre-computation for checking palindrome possiblility
     let mut odd_count: u8 = 0;
     for i in 0..26 {
-        if a[i]&1 == 1 {
+        if a[i] & 1 == 1 {
             odd_count += 1;
         }
     }
@@ -21,10 +21,10 @@ fn main() {
     } else {
         let mut odd_index: usize = 26;
         for i in 0..26 {
-            if a[i]&1 == 0 {
+            if a[i] & 1 == 0 {
                 a[i] >>= 1;
                 for _ in 0..a[i] {
-                    print!("{}", char::from_u32(i as u32+65).unwrap());
+                    print!("{}", char::from_u32(i as u32 + 65).unwrap());
                 }
             } else {
                 odd_index = i;
@@ -32,13 +32,13 @@ fn main() {
         }
         if odd_index != 26 {
             for _ in 0..a[odd_index] {
-                print!("{}", char::from_u32(odd_index as u32+65).unwrap());
+                print!("{}", char::from_u32(odd_index as u32 + 65).unwrap());
             }
             a[odd_index] = 0;
         }
         for i in (0..26).rev() {
             for _ in 0..a[i] {
-                print!("{}", char::from_u32(i as u32+65).unwrap());
+                print!("{}", char::from_u32(i as u32 + 65).unwrap());
             }
         }
         println!("");
@@ -47,12 +47,15 @@ fn main() {
 
 struct Tokenizer {
     buf: Vec<String>,
-    i: usize
+    i: usize,
 }
 
 impl Tokenizer {
     pub fn new() -> Self {
-        return Tokenizer { buf: Vec::<String>::new(), i: 0 };
+        return Tokenizer {
+            buf: Vec::<String>::new(),
+            i: 0,
+        };
     }
 
     fn read_line(&mut self) {
@@ -62,8 +65,10 @@ impl Tokenizer {
         self.i = 0;
     }
 
-    pub fn next<T : std::str::FromStr>(&mut self) -> T
-    where T::Err : std::fmt::Debug {
+    pub fn next<T: std::str::FromStr>(&mut self) -> T
+    where
+        T::Err: std::fmt::Debug,
+    {
         while self.i == self.buf.len() {
             self.read_line();
         }
@@ -79,4 +84,3 @@ impl Tokenizer {
         return s;
     }
 }
-

@@ -2,7 +2,7 @@ fn bin_exp(mut x: u64, mut n: u64) -> u64 {
     let mut res: u64 = 1;
     let m: u64 = 1000000007;
     while n > 0 {
-        if n&1 == 1 {
+        if n & 1 == 1 {
             res = ((res % m) * (x % m)) % m;
         }
         x = ((x % m) * (x % m)) % m;
@@ -20,12 +20,15 @@ fn main() {
 
 struct Tokenizer {
     buf: Vec<String>,
-    i: usize
+    i: usize,
 }
 
 impl Tokenizer {
     pub fn new() -> Self {
-        return Tokenizer { buf: Vec::<String>::new(), i: 0 };
+        return Tokenizer {
+            buf: Vec::<String>::new(),
+            i: 0,
+        };
     }
 
     fn read_line(&mut self) {
@@ -35,8 +38,10 @@ impl Tokenizer {
         self.i = 0;
     }
 
-    pub fn next<T : std::str::FromStr>(&mut self) -> T
-    where T::Err : std::fmt::Debug {
+    pub fn next<T: std::str::FromStr>(&mut self) -> T
+    where
+        T::Err: std::fmt::Debug,
+    {
         while self.i == self.buf.len() {
             self.read_line();
         }
@@ -52,4 +57,3 @@ impl Tokenizer {
         return s;
     }
 }
-

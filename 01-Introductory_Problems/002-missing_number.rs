@@ -1,7 +1,7 @@
 fn main() {
     let mut token = Tokenizer::new();
     let n: u128 = token.next();
-    let mut sum: u128 = n*(n+1)/2;
+    let mut sum: u128 = n * (n + 1) / 2;
     for _ in 1..n {
         let val: u32 = token.next();
         sum -= val as u128;
@@ -41,12 +41,15 @@ fn main() {
 
 struct Tokenizer {
     buf: Vec<String>,
-    i: usize
+    i: usize,
 }
 
 impl Tokenizer {
     pub fn new() -> Self {
-        return Tokenizer { buf: Vec::<String>::new(), i: 0 };
+        return Tokenizer {
+            buf: Vec::<String>::new(),
+            i: 0,
+        };
     }
 
     fn read_line(&mut self) {
@@ -56,8 +59,10 @@ impl Tokenizer {
         self.i = 0;
     }
 
-    pub fn next<T : std::str::FromStr>(&mut self) -> T
-    where T::Err : std::fmt::Debug {
+    pub fn next<T: std::str::FromStr>(&mut self) -> T
+    where
+        T::Err: std::fmt::Debug,
+    {
         while self.i == self.buf.len() {
             self.read_line();
         }
@@ -73,4 +78,3 @@ impl Tokenizer {
         return s;
     }
 }
-

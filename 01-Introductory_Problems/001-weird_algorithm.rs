@@ -3,10 +3,10 @@ fn main() {
     let mut n: i64 = token.next();
     print!("{} ", n);
     while n != 1 {
-        if n&1==0 {
+        if n & 1 == 0 {
             n /= 2;
         } else {
-            n = 3*n + 1;
+            n = 3 * n + 1;
         }
         print!("{} ", n);
     }
@@ -14,12 +14,15 @@ fn main() {
 
 struct Tokenizer {
     buf: Vec<String>,
-    i: usize
+    i: usize,
 }
 
 impl Tokenizer {
     pub fn new() -> Self {
-        return Tokenizer { buf: Vec::<String>::new(), i: 0 };
+        return Tokenizer {
+            buf: Vec::<String>::new(),
+            i: 0,
+        };
     }
 
     fn read_line(&mut self) {
@@ -29,8 +32,10 @@ impl Tokenizer {
         self.i = 0;
     }
 
-    pub fn next<T : std::str::FromStr>(&mut self) -> T
-    where T::Err : std::fmt::Debug {
+    pub fn next<T: std::str::FromStr>(&mut self) -> T
+    where
+        T::Err: std::fmt::Debug,
+    {
         while self.i == self.buf.len() {
             self.read_line();
         }

@@ -1,6 +1,6 @@
 struct Pair {
     ch: u8,
-    count: u8
+    count: u8,
 }
 
 fn permute(v: &mut [Pair], s: &mut String, n: usize) {
@@ -13,7 +13,7 @@ fn permute(v: &mut [Pair], s: &mut String, n: usize) {
         if v[i].count != 0 {
             s.push(v[i].ch as char);
             v[i].count -= 1;
-            permute(v, s, n-1);
+            permute(v, s, n - 1);
             s.pop();
             v[i].count += 1;
         }
@@ -37,7 +37,10 @@ fn main() {
     // creating a shorter vector for shorter loop time
     for i in 0..128 {
         if h[i] != 0 {
-            v.push(Pair { ch: i as u8, count: h[i] as u8 });
+            v.push(Pair {
+                ch: i as u8,
+                count: h[i] as u8,
+            });
             for i in 2..=h[i] {
                 c /= i as u128;
             }
@@ -51,12 +54,15 @@ fn main() {
 
 struct Tokenizer {
     buf: Vec<String>,
-    i: usize
+    i: usize,
 }
 
 impl Tokenizer {
     pub fn new() -> Self {
-        return Tokenizer { buf: Vec::<String>::new(), i: 0 };
+        return Tokenizer {
+            buf: Vec::<String>::new(),
+            i: 0,
+        };
     }
 
     fn read_line(&mut self) {
@@ -66,8 +72,10 @@ impl Tokenizer {
         self.i = 0;
     }
 
-    pub fn next<T : std::str::FromStr>(&mut self) -> T
-    where T::Err : std::fmt::Debug {
+    pub fn next<T: std::str::FromStr>(&mut self) -> T
+    where
+        T::Err: std::fmt::Debug,
+    {
         while self.i == self.buf.len() {
             self.read_line();
         }

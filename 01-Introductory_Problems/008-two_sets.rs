@@ -1,30 +1,30 @@
 fn main() {
     let mut token = Tokenizer::new();
     let n: usize = token.next();
-    if n&3 == 1 || n&3 == 2 {
+    if n & 3 == 1 || n & 3 == 2 {
         println!("NO");
     } else {
         println!("YES");
-        if n&3==0 {
-            println!("{}", n/2);
+        if n & 3 == 0 {
+            println!("{}", n / 2);
             for i in (1..=n).step_by(4) {
-                print!("{} {} ", i, i+3);
+                print!("{} {} ", i, i + 3);
             }
-            println!("\n{}", n/2);
+            println!("\n{}", n / 2);
             for i in (1..=n).step_by(4) {
-                print!("{} {} ", i+1, i+2);
+                print!("{} {} ", i + 1, i + 2);
             }
             println!("");
         } else {
-            println!("{}", (n+1)/2);
+            println!("{}", (n + 1) / 2);
             print!("1 2 ");
             for i in (4..=n).step_by(4) {
-                print!("{} {} ", i, i+3);
+                print!("{} {} ", i, i + 3);
             }
-            println!("\n{}", n/2);
+            println!("\n{}", n / 2);
             print!("3 ");
             for i in (4..=n).step_by(4) {
-                print!("{} {} ", i+1, i+2);
+                print!("{} {} ", i + 1, i + 2);
             }
             println!("");
         }
@@ -68,12 +68,15 @@ fn main() {
 
 struct Tokenizer {
     buf: Vec<String>,
-    i: usize
+    i: usize,
 }
 
 impl Tokenizer {
     pub fn new() -> Self {
-        return Tokenizer { buf: Vec::<String>::new(), i: 0 };
+        return Tokenizer {
+            buf: Vec::<String>::new(),
+            i: 0,
+        };
     }
 
     fn read_line(&mut self) {
@@ -83,8 +86,10 @@ impl Tokenizer {
         self.i = 0;
     }
 
-    pub fn next<T : std::str::FromStr>(&mut self) -> T
-    where T::Err : std::fmt::Debug {
+    pub fn next<T: std::str::FromStr>(&mut self) -> T
+    where
+        T::Err: std::fmt::Debug,
+    {
         while self.i == self.buf.len() {
             self.read_line();
         }
@@ -100,4 +105,3 @@ impl Tokenizer {
         return s;
     }
 }
-

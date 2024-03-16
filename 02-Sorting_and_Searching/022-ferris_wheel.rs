@@ -9,14 +9,14 @@ fn main() {
     v.sort();
 
     let mut l: usize = 0;
-    let mut r: usize = n-1;
+    let mut r: usize = n - 1;
     let mut count: usize = 0;
-    while l<=r {
-        if v[l]+v[r] <= x {
+    while l <= r {
+        if v[l] + v[r] <= x {
             l += 1;
         }
         count += 1;
-        if r==0 {
+        if r == 0 {
             break;
         }
         r -= 1;
@@ -26,12 +26,15 @@ fn main() {
 
 struct Tokenizer {
     buf: Vec<String>,
-    i: usize
+    i: usize,
 }
 
 impl Tokenizer {
     pub fn new() -> Self {
-        return Tokenizer { buf: Vec::<String>::new(), i: 0 };
+        return Tokenizer {
+            buf: Vec::<String>::new(),
+            i: 0,
+        };
     }
 
     fn read_line(&mut self) {
@@ -41,8 +44,10 @@ impl Tokenizer {
         self.i = 0;
     }
 
-    pub fn next<T : std::str::FromStr>(&mut self) -> T
-    where T::Err : std::fmt::Debug {
+    pub fn next<T: std::str::FromStr>(&mut self) -> T
+    where
+        T::Err: std::fmt::Debug,
+    {
         while self.i == self.buf.len() {
             self.read_line();
         }
@@ -58,4 +63,3 @@ impl Tokenizer {
         return s;
     }
 }
-

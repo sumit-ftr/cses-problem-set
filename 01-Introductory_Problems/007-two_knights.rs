@@ -3,7 +3,7 @@ fn main() {
     let n: u64 = token.next();
 
     if n >= 1 {
-        println!("0");   
+        println!("0");
     }
 
     if n >= 2 {
@@ -21,15 +21,15 @@ fn main() {
 
         // 2x2 corners
         // 4 * ((n^2 - 1 - 2) + (n^2 - 1 - 3) + (n^2 - 1 - 3) + (n^2 - 1 - 4))
-        sum += 16 * (i*i - 4);
+        sum += 16 * (i * i - 4);
 
         // 2x(n-4) edges
         // 4 * (n - 4) * ((n^2 - 1 - 4) + (n^2 - 1 - 6))
-        sum += 8 * (i-4) * (i*i - 6);
+        sum += 8 * (i - 4) * (i * i - 6);
 
         // (n-4)x(n-4) centers
         // (n - 4) * (n - 4) * (n^2 - 1 - 8)
-        sum += (i-4) * (i-4) * (i*i - 9);
+        sum += (i - 4) * (i - 4) * (i * i - 9);
 
         sum /= 2;
         println!("{}", sum);
@@ -38,12 +38,15 @@ fn main() {
 
 struct Tokenizer {
     buf: Vec<String>,
-    i: usize
+    i: usize,
 }
 
 impl Tokenizer {
     pub fn new() -> Self {
-        return Tokenizer { buf: Vec::<String>::new(), i: 0 };
+        return Tokenizer {
+            buf: Vec::<String>::new(),
+            i: 0,
+        };
     }
 
     fn read_line(&mut self) {
@@ -53,8 +56,10 @@ impl Tokenizer {
         self.i = 0;
     }
 
-    pub fn next<T : std::str::FromStr>(&mut self) -> T
-    where T::Err : std::fmt::Debug {
+    pub fn next<T: std::str::FromStr>(&mut self) -> T
+    where
+        T::Err: std::fmt::Debug,
+    {
         while self.i == self.buf.len() {
             self.read_line();
         }
@@ -70,4 +75,3 @@ impl Tokenizer {
         return s;
     }
 }
-

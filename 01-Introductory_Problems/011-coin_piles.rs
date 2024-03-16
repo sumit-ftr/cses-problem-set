@@ -4,19 +4,19 @@ fn main() {
     for _ in 0..t {
         let mut a: u32 = token.next();
         let mut b: u32 = token.next();
-        if a > b && a <= b<<1 {
+        if a > b && a <= b << 1 {
             // remove one coin from right pile and two from left pile
-            let d = a-b;
-            a -= d+d;
+            let d = a - b;
+            a -= d + d;
             b -= d;
-        } else if a < b && a<<1 >= b {
+        } else if a < b && a << 1 >= b {
             // remove one coin from left pile and two from right pile
-            let d = b-a;
+            let d = b - a;
             a -= d;
-            b -= d+d;
+            b -= d + d;
         }
 
-        if a == b && a%3 == 0 {
+        if a == b && a % 3 == 0 {
             println!("YES");
         } else {
             println!("NO");
@@ -26,12 +26,15 @@ fn main() {
 
 struct Tokenizer {
     buf: Vec<String>,
-    i: usize
+    i: usize,
 }
 
 impl Tokenizer {
     pub fn new() -> Self {
-        return Tokenizer { buf: Vec::<String>::new(), i: 0 };
+        return Tokenizer {
+            buf: Vec::<String>::new(),
+            i: 0,
+        };
     }
 
     fn read_line(&mut self) {
@@ -41,8 +44,10 @@ impl Tokenizer {
         self.i = 0;
     }
 
-    pub fn next<T : std::str::FromStr>(&mut self) -> T
-    where T::Err : std::fmt::Debug {
+    pub fn next<T: std::str::FromStr>(&mut self) -> T
+    where
+        T::Err: std::fmt::Debug,
+    {
         while self.i == self.buf.len() {
             self.read_line();
         }
@@ -58,4 +63,3 @@ impl Tokenizer {
         return s;
     }
 }
-

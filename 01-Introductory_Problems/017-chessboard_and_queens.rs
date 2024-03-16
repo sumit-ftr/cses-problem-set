@@ -1,20 +1,26 @@
-fn nqueen_variant(v: &Vec<Vec<u8>>, row: usize, sum: &mut usize, 
-  c: &mut Vec<u8>, ld: &mut Vec<u8>, rd: &mut Vec<u8>) {
+fn nqueen_variant(
+    v: &Vec<Vec<u8>>,
+    row: usize,
+    sum: &mut usize,
+    c: &mut Vec<u8>,
+    ld: &mut Vec<u8>,
+    rd: &mut Vec<u8>,
+) {
     if row == v.len() {
         *sum += 1;
         return;
     }
 
     for col in 0..v.len() {
-        if c[col] == 0 && rd[row+col] == 0 &&
-          ld[v.len()-1+col-row] == 0 && v[row][col] == 0 {
+        if c[col] == 0 && rd[row + col] == 0 && ld[v.len() - 1 + col - row] == 0 && v[row][col] == 0
+        {
             c[col] = 1;
-            rd[row+col] = 1;
-            ld[v.len()-1+col-row] = 1;
-            nqueen_variant(v, row+1, sum, c, ld, rd);
+            rd[row + col] = 1;
+            ld[v.len() - 1 + col - row] = 1;
+            nqueen_variant(v, row + 1, sum, c, ld, rd);
             c[col] = 0;
-            rd[row+col] = 0;
-            ld[v.len()-1+col-row] = 0;
+            rd[row + col] = 0;
+            ld[v.len() - 1 + col - row] = 0;
         }
     }
     return;
@@ -25,8 +31,8 @@ fn main() {
     let n: usize = 8;
     let mut v: Vec<Vec<u8>> = vec![Vec::with_capacity(n); n];
     let mut c: Vec<u8> = vec![0; n];
-    let mut ld: Vec<u8> = vec![0; 2*n-1];
-    let mut rd: Vec<u8> = vec![0; 2*n-1];
+    let mut ld: Vec<u8> = vec![0; 2 * n - 1];
+    let mut rd: Vec<u8> = vec![0; 2 * n - 1];
     let mut sum: usize = 0;
     // 0 for free , 1 for queens , 2 for reserved
     for i in 0..n {
@@ -71,12 +77,15 @@ fn is_safe(v: &Vec<Vec<u8>>, i: usize, j: usize) -> bool {
 
 struct Tokenizer {
     buf: Vec<String>,
-    i: usize
+    i: usize,
 }
 
 impl Tokenizer {
     pub fn new() -> Self {
-        return Tokenizer { buf: Vec::<String>::new(), i: 0 };
+        return Tokenizer {
+            buf: Vec::<String>::new(),
+            i: 0,
+        };
     }
 
     fn read_line(&mut self) {
@@ -86,8 +95,10 @@ impl Tokenizer {
         self.i = 0;
     }
 
-    pub fn next<T : std::str::FromStr>(&mut self) -> T
-    where T::Err : std::fmt::Debug {
+    pub fn next<T: std::str::FromStr>(&mut self) -> T
+    where
+        T::Err: std::fmt::Debug,
+    {
         while self.i == self.buf.len() {
             self.read_line();
         }
@@ -103,4 +114,3 @@ impl Tokenizer {
         return s;
     }
 }
-

@@ -7,19 +7,19 @@ fn main() {
         let result: u128;
         let max: u128 = u128::max(x, y);
         // (max-1)^2 .. max^2
-        if max&1 == 0 {
+        if max & 1 == 0 {
             // starts from upside
             if x > y {
-                result = u128::pow(max, 2) - (y-1) as u128;
+                result = u128::pow(max, 2) - (y - 1) as u128;
             } else {
-                result = u128::pow(max-1, 2) + x as u128;
+                result = u128::pow(max - 1, 2) + x as u128;
             }
         } else {
             // starts from leftside
             if x > y {
-                result = u128::pow(max-1, 2) + y as u128;
+                result = u128::pow(max - 1, 2) + y as u128;
             } else {
-                result = u128::pow(max, 2) - (x-1) as u128;
+                result = u128::pow(max, 2) - (x - 1) as u128;
             }
         }
         println!("{result}");
@@ -28,12 +28,15 @@ fn main() {
 
 struct Tokenizer {
     buf: Vec<String>,
-    i: usize
+    i: usize,
 }
 
 impl Tokenizer {
     pub fn new() -> Self {
-        return Tokenizer { buf: Vec::<String>::new(), i: 0 };
+        return Tokenizer {
+            buf: Vec::<String>::new(),
+            i: 0,
+        };
     }
 
     fn read_line(&mut self) {
@@ -43,8 +46,10 @@ impl Tokenizer {
         self.i = 0;
     }
 
-    pub fn next<T : std::str::FromStr>(&mut self) -> T
-    where T::Err : std::fmt::Debug {
+    pub fn next<T: std::str::FromStr>(&mut self) -> T
+    where
+        T::Err: std::fmt::Debug,
+    {
         while self.i == self.buf.len() {
             self.read_line();
         }
@@ -60,4 +65,3 @@ impl Tokenizer {
         return s;
     }
 }
-

@@ -10,14 +10,14 @@ fn main() {
     println!("{s}");
     for i in 1..m {
         let mut c: usize = 0;
-        while i&(1<<c) == 0 {
+        while i & (1 << c) == 0 {
             c += 1;
         }
 
         if s.chars().nth(c).unwrap() == '0' {
-            s.replace_range(c..c+1, "1");
+            s.replace_range(c..c + 1, "1");
         } else {
-            s.replace_range(c..c+1, "0");
+            s.replace_range(c..c + 1, "0");
         }
         println!("{s}");
     }
@@ -25,12 +25,15 @@ fn main() {
 
 struct Tokenizer {
     buf: Vec<String>,
-    i: usize
+    i: usize,
 }
 
 impl Tokenizer {
     pub fn new() -> Self {
-        return Tokenizer { buf: Vec::<String>::new(), i: 0 };
+        return Tokenizer {
+            buf: Vec::<String>::new(),
+            i: 0,
+        };
     }
 
     fn read_line(&mut self) {
@@ -40,8 +43,10 @@ impl Tokenizer {
         self.i = 0;
     }
 
-    pub fn next<T : std::str::FromStr>(&mut self) -> T
-    where T::Err : std::fmt::Debug {
+    pub fn next<T: std::str::FromStr>(&mut self) -> T
+    where
+        T::Err: std::fmt::Debug,
+    {
         while self.i == self.buf.len() {
             self.read_line();
         }
@@ -57,4 +62,3 @@ impl Tokenizer {
         return s;
     }
 }
-

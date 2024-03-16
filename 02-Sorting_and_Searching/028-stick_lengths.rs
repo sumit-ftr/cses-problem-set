@@ -1,5 +1,23 @@
 fn main() {
     let mut token = Tokenizer::new();
+    let n = token.next::<usize>();
+    let mut v = Vec::with_capacity(n);
+    for _ in 0..n {
+        v.push(token.next::<u32>());
+    }
+    v.sort_unstable();
+
+    let mid = v.len() >> 1;
+    let median = v[mid] as i64;
+    let mut cost = 0i64;
+    for item in &v[..mid] {
+        cost += median - *item as i64;
+    }
+    for item in &v[mid..] {
+        cost += *item as i64 - median;
+    }
+
+    println!("{cost}");
 }
 
 struct Tokenizer {

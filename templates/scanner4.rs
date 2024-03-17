@@ -1,15 +1,18 @@
+use std::io::Write;
+
 fn main() {
-    let mut token = Tokenizer::new();
+    let mut sc = Scanner::new();
+    let mut op = std::io::BufWriter::new(std::io::stdout().lock());
 }
 
-struct Tokenizer {
+struct Scanner {
     buf: Vec<String>,
     i: usize,
 }
 
-impl Tokenizer {
+impl Scanner {
     pub fn new() -> Self {
-        return Tokenizer {
+        return Scanner {
             buf: Vec::<String>::new(),
             i: 0,
         };

@@ -1,5 +1,8 @@
+use std::io::Write;
+
 fn main() {
     let mut sc = Scanner::new(std::io::stdin().lock());
+    let mut op = std::io::BufWriter::new(std::io::stdout().lock());
 }
 
 pub struct Scanner<'a> {

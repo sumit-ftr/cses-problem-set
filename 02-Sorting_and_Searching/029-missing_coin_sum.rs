@@ -1,5 +1,20 @@
 fn main() {
     let mut sc = Scanner::new(std::io::stdin().lock());
+    let n = sc.next::<usize>();
+    let mut list = Vec::<u32>::with_capacity(n);
+    for _ in 0..n {
+        list.push(sc.next());
+    }
+    list.sort_unstable();
+    let mut sum = 0usize;
+    for i in 0..n {
+        if list[i] as usize <= sum + 1 {
+            sum += list[i] as usize;
+        } else {
+            break;
+        }
+    }
+    println!("{}", sum + 1);
 }
 
 pub struct Scanner<R> {

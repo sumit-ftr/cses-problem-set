@@ -1,5 +1,5 @@
 fn main() {
-    let mut sc = Scanner::new(std::io::stdin().lock());
+    let mut token = Scanner::new(std::io::stdin().lock());
 }
 
 pub struct Scanner<R> {

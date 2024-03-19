@@ -1,20 +1,19 @@
 fn main() {
     let mut token = Scanner::new(std::io::stdin().lock());
     let n = token.next::<usize>();
-    let mut list = Vec::<u32>::with_capacity(n);
-    for _ in 0..n {
-        list.push(token.next());
+    let mut v = vec![0u32; n + 1];
+    for i in 1..=n {
+        let value = token.next::<usize>();
+        v[value] = i as u32;
     }
-    list.sort_unstable();
-    let mut sum = 0usize;
-    for i in 0..n {
-        if list[i] as usize <= sum + 1 {
-            sum += list[i] as usize;
-        } else {
-            break;
+    // count is taken as 1 for counting the first round
+    let mut count = 1;
+    for i in 1..n {
+        if v[i] > v[i + 1] {
+            count += 1;
         }
     }
-    println!("{}", sum + 1);
+    println!("{}", count);
 }
 
 pub struct Scanner<R> {

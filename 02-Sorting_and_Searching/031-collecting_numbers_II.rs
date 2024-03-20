@@ -1,32 +1,26 @@
-fn diff_abs(a: usize, b: usize) -> usize {
-    if a > b {
-        a - b
-    } else {
-        b - a
-    }
-}
+use std::io::Write;
 
-fn check(v: &[u32], mut fi: usize, mut se: usize, n: usize) -> usize {
-    let mut res = 0usize;
-    if diff_abs(fi, se) >= 2 {
-        if fi < n && v[fi] > v[fi + 1] {
+fn update(v: &[u32], mut fi: usize, mut se: usize) -> isize {
+    let mut res = 0isize;
+    if isize::abs(fi as isize - se as isize) >= 2 {
+        if v[fi] > v[fi + 1] {
             res += 1;
         }
-        if se > 1 && v[se - 1] > v[se] {
+        if v[se - 1] > v[se] {
             res += 1;
         }
     } else {
         if fi > se {
-            (fi, se) = (se, fi);
+            std::mem::swap(&mut fi, &mut se);
         }
         if v[fi] > v[se] {
             res += 1;
         }
     }
-    if fi > 1 && v[fi - 1] > v[fi] {
+    if v[fi - 1] > v[fi] {
         res += 1;
     }
-    if se < n && v[se] > v[se + 1] {
+    if v[se] > v[se + 1] {
         res += 1;
     }
     res
@@ -34,17 +28,19 @@ fn check(v: &[u32], mut fi: usize, mut se: usize, n: usize) -> usize {
 
 fn main() {
     let mut token = Scanner::new(std::io::stdin().lock());
+    let mut out = std::io::BufWriter::new(std::io::stdout().lock());
     let n = token.next::<usize>();
     let m = token.next::<usize>();
-    let mut u = Vec::with_capacity(n + 1);
-    let mut v = vec![0u32; n + 1];
+    let mut count = 1isize;
+    let mut u = Vec::with_capacity(n + 2);
+    let mut v = vec![0u32; n + 2];
     u.push(0);
     for i in 1..=n {
-        let value = token.next::<usize>();
-        u.push(value as u32);
-        v[value] = i as u32;
+        u.push(token.next::<u32>());
+        v[u[i] as usize] = i as u32;
     }
-    let mut count = 1usize;
+    u.push(n as u32 + 1);
+    v[n + 1] = n as u32 + 1;
     for i in 1..n {
         if v[i] > v[i + 1] {
             count += 1;
@@ -54,17 +50,16 @@ fn main() {
         let mut fi = token.next::<usize>();
         let mut se = token.next::<usize>();
         // swapping main value array
-        (u[fi], u[se]) = (u[se], u[fi]);
+        u.swap(fi, se);
 
         (fi, se) = (u[se] as usize, u[fi] as usize);
-        let dec = check(&v, fi, se, n);
+        count -= update(&v, fi, se);
 
         // swapping mapped value array
-        (v[fi], v[se]) = (v[se], v[fi]);
-        let inc = check(&v, fi, se, n);
+        v.swap(fi, se);
+        count += update(&v, fi, se);
 
-        count = (count as isize + (inc as isize - dec as isize)) as usize;
-        println!("{}", count);
+        writeln!(out, "{}", count).unwrap();
     }
 }
 

@@ -1,5 +1,8 @@
+use std::io::Write;
+
 fn main() {
     let mut token = Scanner::new(std::io::stdin().lock());
+    let mut out = std::io::BufWriter::new(std::io::stdout().lock());
 }
 
 pub struct Scanner<R> {

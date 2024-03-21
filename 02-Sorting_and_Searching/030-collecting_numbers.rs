@@ -1,10 +1,12 @@
+use std::io::Write;
+
 fn main() {
     let mut token = Scanner::new(std::io::stdin().lock());
+    let mut out = std::io::BufWriter::new(std::io::stdout().lock());
     let n = token.next::<usize>();
     let mut v = vec![0u32; n + 1];
     for i in 1..=n {
-        let value = token.next::<usize>();
-        v[value] = i as u32;
+        v[token.next::<usize>()] = i as u32;
     }
     // count is taken as 1 for counting the first round
     let mut count = 1;
@@ -13,7 +15,7 @@ fn main() {
             count += 1;
         }
     }
-    println!("{}", count);
+    writeln!(out, "{count}").unwrap();
 }
 
 pub struct Scanner<R> {

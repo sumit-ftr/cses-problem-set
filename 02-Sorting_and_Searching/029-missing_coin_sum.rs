@@ -1,5 +1,8 @@
+use std::io::Write;
+
 fn main() {
     let mut token = Scanner::new(std::io::stdin().lock());
+    let mut out = std::io::BufWriter::new(std::io::stdout().lock());
     let n = token.next::<usize>();
     let mut list = Vec::<u32>::with_capacity(n);
     for _ in 0..n {
@@ -14,7 +17,7 @@ fn main() {
             break;
         }
     }
-    println!("{}", sum + 1);
+    writeln!(out, "{}", sum + 1).unwrap();
 }
 
 pub struct Scanner<R> {

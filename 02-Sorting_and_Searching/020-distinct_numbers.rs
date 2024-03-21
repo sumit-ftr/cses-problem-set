@@ -1,7 +1,9 @@
 use std::collections::HashSet;
+use std::io::Write;
 
 fn main() {
-    let mut token = Tokenizer::new();
+    let mut token = Scanner::new(std::io::stdin().lock());
+    let mut out = std::io::BufWriter::new(std::io::stdout().lock());
     let n: usize = token.next();
     let mut h: HashSet<u32> = HashSet::with_capacity(n);
     let mut unique: u32 = 0;
@@ -12,45 +14,37 @@ fn main() {
             unique += 1;
         }
     }
-    println!("{unique}");
+    writeln!(out, "{unique}").unwrap();
 }
 
-struct Tokenizer {
-    buf: Vec<String>,
-    i: usize,
+pub struct Scanner<R> {
+    reader: R,
+    buf_str: Vec<u8>,
+    buf_iter: std::str::SplitAsciiWhitespace<'static>,
 }
 
-impl Tokenizer {
-    pub fn new() -> Self {
-        return Tokenizer {
-            buf: Vec::<String>::new(),
-            i: 0,
-        };
-    }
-
-    fn read_line(&mut self) {
-        let mut s = String::new();
-        std::io::stdin().read_line(&mut s).unwrap();
-        self.buf = s.split_whitespace().map(str::to_string).collect();
-        self.i = 0;
-    }
-
-    pub fn next<T: std::str::FromStr>(&mut self) -> T
-    where
-        T::Err: std::fmt::Debug,
-    {
-        while self.i == self.buf.len() {
-            self.read_line();
+impl<R: std::io::BufRead> Scanner<R> {
+    pub fn new(reader: R) -> Self {
+        Self {
+            reader,
+            buf_str: vec![],
+            buf_iter: "".split_ascii_whitespace(),
         }
-        let t = self.buf[self.i].parse().unwrap();
-        self.i += 1;
-        return t;
     }
 
-    #[allow(dead_code)]
-    pub fn next_line(&self) -> String {
-        let mut s = String::new();
-        std::io::stdin().read_line(&mut s).unwrap();
-        return s;
+    pub fn next<T: std::str::FromStr>(&mut self) -> T {
+        loop {
+            if let Some(token) = self.buf_iter.next() {
+                return token.parse().ok().expect("Failed parse");
+            }
+            self.buf_str.clear();
+            self.reader
+                .read_until(b'\n', &mut self.buf_str)
+                .expect("Failed read");
+            self.buf_iter = unsafe {
+                let slice = std::str::from_utf8_unchecked(&self.buf_str);
+                std::mem::transmute(slice.split_ascii_whitespace())
+            }
+        }
     }
 }

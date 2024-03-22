@@ -8,25 +8,22 @@ fn main() {
     let m: usize = token.next();
     let mut tickets: BTreeMap<u32, u32> = BTreeMap::new();
     for _ in 0..n {
-        let x: u32 = token.next();
-        tickets.entry(x).and_modify(|v| *v += 1).or_insert(1);
+        tickets
+            .entry(token.next::<u32>())
+            .and_modify(|v| *v += 1)
+            .or_insert(1);
     }
     for _ in 0..m {
         let price: u32 = token.next();
-        let mut flag: Option<u32> = None;
-        if let Some((k, v)) = tickets.range_mut(..=price).rev().next() {
-            if *v > 0 {
-                writeln!(out, "{k}").unwrap();
+        if let Some((&k, v)) = tickets.range_mut(..=price).next_back() {
+            writeln!(out, "{k}").unwrap();
+            if *v == 1 {
+                tickets.remove(&k);
+            } else {
                 *v -= 1;
-            }
-            if *v == 0 {
-                flag = Some(k.clone());
             }
         } else {
             writeln!(out, "-1").unwrap();
-        }
-        if let Some(k) = flag {
-            tickets.remove(&k);
         }
     }
 }

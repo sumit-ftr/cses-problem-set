@@ -8,18 +8,17 @@ struct Pair {
 fn main() {
     let mut token = Scanner::new(std::io::stdin().lock());
     let mut out = std::io::BufWriter::new(std::io::stdout().lock());
-    let n: usize = token.next();
-    let mut v: Vec<Pair> = Vec::with_capacity(n);
+    let n = token.next::<usize>();
+    let mut v = Vec::<Pair>::with_capacity(n);
     for _ in 0..n {
-        let p: Pair = Pair {
+        v.push(Pair {
             s: token.next(),
             e: token.next(),
-        };
-        v.push(p);
+        });
     }
     v.sort_by(|a, b| (a.e).cmp(&b.e).then((a.s).cmp(&b.s)));
-    let mut lmet: u32 = 0; // last movie ending time
-    let mut count: u32 = 0;
+    let mut lmet = 0u32; // last movie ending time
+    let mut count = 0u32;
     for i in 0..n {
         if lmet <= v[i].s {
             lmet = v[i].e;

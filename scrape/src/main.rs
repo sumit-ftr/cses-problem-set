@@ -9,7 +9,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         std::process::exit(1);
     });
     cfg.get_fastest();
-    cfg.create_json()?;
+    cfg.create_json().await?;
     cfg.write_all_files();
     Ok(())
 }

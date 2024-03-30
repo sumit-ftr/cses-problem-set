@@ -8,8 +8,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         eprintln!("{e}");
         std::process::exit(1);
     });
-    cfg.get_fastest();
+    cfg.get_fastest().await?;
     cfg.create_json().await?;
-    cfg.write_all_files();
+    cfg.write_all_files().await?;
     Ok(())
 }

@@ -1,7 +1,7 @@
 use reqwest::{self, cookie::Jar, Client, Url};
 use scraper::{Html, Selector};
 use serde_json;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::error::Error;
 use tokio::{self, fs::File, io::AsyncWriteExt};
 
@@ -17,7 +17,7 @@ pub struct Config {
 impl Config {
     pub async fn new(mut a: std::env::Args) -> Result<Self, Box<dyn Error>> {
         a.next();
-        let (pno, url) = match a.next() {
+        let (pno, mut url) = match a.next() {
             Some(num) => {
                 let num = num.parse::<usize>()?;
                 (num, format!("https://cses.fi/problemset/hack/{num}/list/"))
@@ -34,15 +34,18 @@ impl Config {
             .build()?;
 
         Self::authenticate(&client).await?;
-        let rng = Self::get_range(&client, &url).await?;
+        let mut top_rust = BTreeMap::<usize, String>::new();
+        let mut top_time = BTreeMap::<usize, String>::new();
+        let rng = Self::get_range(&client, &url, &mut top_rust, &mut top_time).await?;
+        url.push_str("12/");
 
         Ok(Self {
             url,
             pno,
             rng,
             client,
-            top_rust: BTreeMap::new(),
-            top_time: BTreeMap::new(),
+            top_rust,
+            top_time,
         })
     }
 
@@ -64,7 +67,7 @@ impl Config {
         let pass = tokio::fs::read_to_string("userdata/password").await?;
         client
             .post(login_url)
-            .form(&HashMap::from([
+            .form(&std::collections::HashMap::from([
                 ("csrf_token", csrf_token),
                 ("nick", &nick[..nick.len() - 1]),
                 ("pass", &pass[..pass.len() - 1]),
@@ -75,21 +78,61 @@ impl Config {
         Ok(())
     }
 
-    pub async fn get_range(client: &Client, url: &str) -> Result<usize, Box<dyn Error>> {
+    pub async fn get_range(
+        client: &Client,
+        url: &str,
+        top_rust: &mut BTreeMap<usize, String>,
+        top_time: &mut BTreeMap<usize, String>,
+    ) -> Result<usize, Box<dyn Error>> {
         let res_body = client.get(url).send().await?.text().await?;
-        println!("{res_body:?}");
         let fragment = Html::parse_fragment(&res_body);
-        let rng = fragment
-            .select(&Selector::parse(r#"div[class="pager full-width"]"#)?)
-            .next()
-            .unwrap();
-        println!("{rng:?}");
 
-        Ok(0)
+        // updating the BTreeMaps
+        let selector = Selector::parse("td")?;
+        let mut submissions = fragment.select(&selector);
+        while let Some(_) = submissions.next() {
+            submissions.next();
+            let lang = submissions.next().unwrap().inner_html();
+            let time = submissions.next().unwrap().inner_html();
+            let chr_cnt = submissions.next().unwrap().inner_html();
+            let endpoint = Html::parse_fragment(&submissions.next().unwrap().inner_html());
+
+            let key = (time[..time.len() - 2].parse::<f64>().unwrap() * 100.0) as usize
+                * chr_cnt[..chr_cnt.len() - 4].parse::<usize>().unwrap();
+            let value = endpoint
+                .select(&Selector::parse("a")?)
+                .next()
+                .unwrap()
+                .attr("href")
+                .unwrap();
+
+            if lang == "Rust" {
+                top_rust.insert(key, format!("https://cses.fi{value}"));
+            }
+            top_time.insert(key, format!("https://cses.fi{value}"));
+        }
+
+        let rng = fragment
+            .select(&Selector::parse("a")?)
+            .nth(17)
+            .unwrap()
+            .inner_html()
+            .parse::<usize>()
+            .unwrap();
+
+        Ok(rng)
     }
 
-    pub fn get_fastest(&mut self) {
+    pub async fn get_fastest_on_page(&mut self) -> Result<(), Box<dyn Error>> {
+        // while let Some(val) = it.next() {
+        //     println!("{:#?}", val.html());
+        // }
+        Ok(())
+    }
+
+    pub async fn get_fastest(&mut self) -> Result<(), Box<dyn Error>> {
         // key calculation: execution_time * 100 * no_of_chars
+        Ok(())
     }
 
     pub async fn create_json(&self) -> Result<(), Box<dyn Error>> {
@@ -108,5 +151,7 @@ impl Config {
         Ok(())
     }
 
-    pub fn write_all_files(&self) {}
+    pub async fn write_all_files(&self) -> Result<(), Box<dyn Error>> {
+        Ok(())
+    }
 }

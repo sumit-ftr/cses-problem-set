@@ -1,6 +1,8 @@
+use std::io::Write;
+
 fn bin_exp(mut x: u64, mut n: u64) -> u64 {
-    let mut res: u64 = 1;
-    let m: u64 = 1000000007;
+    let mut res = 1u64;
+    let m = 1000000007u64;
     while n > 0 {
         if n & 1 == 1 {
             res = ((res % m) * (x % m)) % m;
@@ -12,48 +14,41 @@ fn bin_exp(mut x: u64, mut n: u64) -> u64 {
 }
 
 fn main() {
-    let mut token = Tokenizer::new();
-    let n: u64 = token.next();
-    let exp: u64 = bin_exp(2, n);
-    println!("{}", exp);
+    let mut token = Scanner::new(std::io::stdin().lock());
+    let mut out = std::io::BufWriter::new(std::io::stdout().lock());
+    let n = token.next::<u64>();
+    let exp = bin_exp(2, n);
+    writeln!(out, "{exp}").unwrap();
 }
 
-struct Tokenizer {
-    buf: Vec<String>,
-    i: usize,
+pub struct Scanner<R> {
+    reader: R,
+    buf_str: Vec<u8>,
+    buf_iter: std::str::SplitAsciiWhitespace<'static>,
 }
 
-impl Tokenizer {
-    pub fn new() -> Self {
-        return Tokenizer {
-            buf: Vec::<String>::new(),
-            i: 0,
-        };
-    }
-
-    fn read_line(&mut self) {
-        let mut s = String::new();
-        std::io::stdin().read_line(&mut s).unwrap();
-        self.buf = s.split_whitespace().map(str::to_string).collect();
-        self.i = 0;
-    }
-
-    pub fn next<T: std::str::FromStr>(&mut self) -> T
-    where
-        T::Err: std::fmt::Debug,
-    {
-        while self.i == self.buf.len() {
-            self.read_line();
+impl<R: std::io::BufRead> Scanner<R> {
+    pub fn new(reader: R) -> Self {
+        Self {
+            reader,
+            buf_str: vec![],
+            buf_iter: "".split_ascii_whitespace(),
         }
-        let t = self.buf[self.i].parse().unwrap();
-        self.i += 1;
-        return t;
     }
 
-    #[allow(dead_code)]
-    pub fn next_line(&self) -> String {
-        let mut s = String::new();
-        std::io::stdin().read_line(&mut s).unwrap();
-        return s;
+    pub fn next<T: std::str::FromStr>(&mut self) -> T {
+        loop {
+            if let Some(token) = self.buf_iter.next() {
+                return token.parse().ok().expect("Failed parse");
+            }
+            self.buf_str.clear();
+            self.reader
+                .read_until(b'\n', &mut self.buf_str)
+                .expect("Failed read");
+            self.buf_iter = unsafe {
+                let slice = std::str::from_utf8_unchecked(&self.buf_str);
+                std::mem::transmute(slice.split_ascii_whitespace())
+            }
+        }
     }
 }

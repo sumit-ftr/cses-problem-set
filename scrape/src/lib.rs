@@ -10,8 +10,8 @@ pub struct Config {
     pno: usize, // problem number
     rng: usize, // range of web pages of the problem
     client: Client,
-    top_rust: BTreeMap<usize, String>,
-    top_time: BTreeMap<usize, String>,
+    top_rust: BTreeMap<(u8, u16), String>,
+    top_time: BTreeMap<(u8, u16), String>,
 }
 
 impl Config {
@@ -34,8 +34,8 @@ impl Config {
             .build()?;
 
         Self::authenticate(&client).await?;
-        let mut top_rust = BTreeMap::<usize, String>::new();
-        let mut top_time = BTreeMap::<usize, String>::new();
+        let mut top_rust = BTreeMap::<(u8, u16), String>::new();
+        let mut top_time = BTreeMap::<(u8, u16), String>::new();
         let rng = Self::get_range(&client, &url, &mut top_rust, &mut top_time).await?;
         url.push_str("12/");
 
@@ -81,8 +81,8 @@ impl Config {
     pub async fn get_range(
         client: &Client,
         url: &str,
-        top_rust: &mut BTreeMap<usize, String>,
-        top_time: &mut BTreeMap<usize, String>,
+        top_rust: &mut BTreeMap<(u8, u16), String>,
+        top_time: &mut BTreeMap<(u8, u16), String>,
     ) -> Result<usize, Box<dyn Error>> {
         let res_body = client.get(url).send().await?.text().await?;
         let fragment = Html::parse_fragment(&res_body);
@@ -97,19 +97,23 @@ impl Config {
             let chr_cnt = submissions.next().unwrap().inner_html();
             let endpoint = Html::parse_fragment(&submissions.next().unwrap().inner_html());
 
-            let key = (time[..time.len() - 2].parse::<f64>().unwrap() * 100.0) as usize
-                * chr_cnt[..chr_cnt.len() - 4].parse::<usize>().unwrap();
-            let value = endpoint
-                .select(&Selector::parse("a")?)
-                .next()
-                .unwrap()
-                .attr("href")
-                .unwrap();
+            let time = time[..time.len() - 2].parse::<f64>().unwrap() as u8;
+            let len = chr_cnt[..chr_cnt.len() - 4].parse::<usize>().unwrap() as u16;
+            let value = format!(
+                "https://cses.fi{}",
+                endpoint
+                    .select(&Selector::parse("a")?)
+                    .next()
+                    .unwrap()
+                    .attr("href")
+                    .unwrap()
+            );
 
             if lang == "Rust" {
-                top_rust.insert(key, format!("https://cses.fi{value}"));
+                top_rust.insert((time, len), value);
+            } else {
+                top_time.insert((time, len), value);
             }
-            top_time.insert(key, format!("https://cses.fi{value}"));
         }
 
         let rng = fragment
@@ -123,15 +127,14 @@ impl Config {
         Ok(rng)
     }
 
-    pub async fn get_fastest_on_page(&mut self) -> Result<(), Box<dyn Error>> {
-        // while let Some(val) = it.next() {
-        //     println!("{:#?}", val.html());
-        // }
+    pub async fn get_fastest(&mut self) -> Result<(), Box<dyn Error>> {
         Ok(())
     }
 
-    pub async fn get_fastest(&mut self) -> Result<(), Box<dyn Error>> {
-        // key calculation: execution_time * 100 * no_of_chars
+    pub async fn get_fastest_by_page(&mut self) -> Result<(), Box<dyn Error>> {
+        // while let Some(val) = it.next() {
+        //     println!("{:#?}", val.html());
+        // }
         Ok(())
     }
 

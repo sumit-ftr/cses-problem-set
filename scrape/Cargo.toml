@@ -9,5 +9,6 @@ authors = ["Sumit Modak <sumit.modak.code@gmail.com>"]
 [dependencies]
 reqwest = { version = "0.12.2", features = ["cookies"] }
 scraper = "0.19.0"
-serde_json = "1.0.115"
+serde = { version = "1.0.197", features = ["serde_derive"] }
+serde_json = { version = "1.0.115", features = ["std"] }
 tokio = { version = "1.36.0", features = ["full"] }

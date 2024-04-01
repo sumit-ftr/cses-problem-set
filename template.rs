@@ -23,12 +23,10 @@ impl<R: std::io::BufRead> Scanner<R> {
     pub fn next<T: std::str::FromStr>(&mut self) -> T {
         loop {
             if let Some(token) = self.iter.next() {
-                return token.parse().ok().expect("Failed parse");
+                return token.parse().ok().unwrap();
             }
             self.buffer.clear();
-            self.reader
-                .read_until(b'\n', &mut self.buffer)
-                .expect("Failed read");
+            self.reader.read_until(b'\n', &mut self.buffer).unwrap();
             self.iter = unsafe {
                 let slice = std::str::from_utf8_unchecked(&self.buffer);
                 std::mem::transmute(slice.split_ascii_whitespace())

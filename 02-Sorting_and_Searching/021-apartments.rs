@@ -3,11 +3,11 @@ use std::io::Write;
 fn main() {
     let mut token = Scanner::new(std::io::stdin().lock());
     let mut out = std::io::BufWriter::new(std::io::stdout().lock());
-    let n: usize = token.next();
-    let m: usize = token.next();
-    let k: u32 = token.next();
-    let mut applicants: Vec<u32> = Vec::with_capacity(n);
-    let mut apartments: Vec<u32> = Vec::with_capacity(m);
+    let n = token.next::<usize>();
+    let m = token.next::<usize>();
+    let k = token.next::<u32>();
+    let mut applicants = Vec::<u32>::with_capacity(n);
+    let mut apartments = Vec::<u32>::with_capacity(m);
     for _ in 0..n {
         applicants.push(token.next());
     }
@@ -36,30 +36,28 @@ fn main() {
 
 pub struct Scanner<R> {
     reader: R,
-    buf_str: Vec<u8>,
-    buf_iter: std::str::SplitAsciiWhitespace<'static>,
+    buffer: Vec<u8>,
+    iter: std::str::SplitAsciiWhitespace<'static>,
 }
 
 impl<R: std::io::BufRead> Scanner<R> {
     pub fn new(reader: R) -> Self {
         Self {
             reader,
-            buf_str: vec![],
-            buf_iter: "".split_ascii_whitespace(),
+            buffer: vec![],
+            iter: "".split_ascii_whitespace(),
         }
     }
 
     pub fn next<T: std::str::FromStr>(&mut self) -> T {
         loop {
-            if let Some(token) = self.buf_iter.next() {
-                return token.parse().ok().expect("Failed parse");
+            if let Some(token) = self.iter.next() {
+                return token.parse().ok().unwrap();
             }
-            self.buf_str.clear();
-            self.reader
-                .read_until(b'\n', &mut self.buf_str)
-                .expect("Failed read");
-            self.buf_iter = unsafe {
-                let slice = std::str::from_utf8_unchecked(&self.buf_str);
+            self.buffer.clear();
+            self.reader.read_until(b'\n', &mut self.buffer).unwrap();
+            self.iter = unsafe {
+                let slice = std::str::from_utf8_unchecked(&self.buffer);
                 std::mem::transmute(slice.split_ascii_whitespace())
             }
         }

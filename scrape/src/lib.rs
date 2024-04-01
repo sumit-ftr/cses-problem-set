@@ -7,9 +7,9 @@ use std::error::Error;
 use tokio::{self, fs::File, io::AsyncWriteExt};
 
 pub struct Config {
-    url: String,
-    pno: usize, // problem number
-    rng: usize, // range of web pages of the problem
+    url: String, // hacking base url
+    pno: usize,  // problem number
+    rng: usize,  // range of web pages of the problem
     client: Client,
     top_rust: BTreeMap<(u8, u16), String>,
     top_time: BTreeMap<(u8, u16), String>,
@@ -95,15 +95,14 @@ impl Config {
         println!("parsed 1st page successfully");
 
         let rng = fragment
-            .select(&Selector::parse("a")?)
+            .select(&Selector::parse("a").unwrap())
             .nth(17)
             .unwrap()
             .inner_html()
             .parse::<usize>()
             .unwrap();
 
-        // Ok(rng)
-        Ok(5)
+        Ok(rng)
     }
 
     pub async fn get_fastest_by_page(
@@ -114,7 +113,7 @@ impl Config {
         let fragment = Html::parse_fragment(res_body);
 
         // updating the BTreeMaps
-        let selector = Selector::parse("td")?;
+        let selector = Selector::parse("td").unwrap();
         let mut submissions = fragment.select(&selector);
         while let Some(_) = submissions.next() {
             submissions.next();
@@ -125,7 +124,7 @@ impl Config {
             let endpoint = Html::parse_fragment(&submissions.next().unwrap().inner_html());
 
             // computing the key & values of the BTreeMaps
-            let time = time[..time.len() - 2].parse::<f64>().unwrap() as u8;
+            let time = (time[..time.len() - 2].parse::<f64>().unwrap() * 100.0) as u8;
             let len = chr_cnt[..chr_cnt.len() - 4].parse::<usize>().unwrap() as u16;
             let value = format!(
                 "https://cses.fi{}",
@@ -174,7 +173,7 @@ impl Config {
         let mut ftrs = File::create(&format!("solutions/{}/top_rust.json", self.pno)).await?;
         let mut fttm = File::create(&format!("solutions/{}/top_time.json", self.pno)).await?;
 
-        // creating new vectors of SolnEntry
+        // creating new vectors of SolnEntry to Serialize to a proper type
         #[derive(serde::Serialize)]
         struct SolnEntry {
             time: u8,
@@ -211,10 +210,37 @@ impl Config {
     }
 
     pub async fn write_all_files(&self) -> Result<(), Box<dyn Error>> {
+        // creates all the top rust files
+        println!("writing top rust files");
+        for (i, ((time, len), purl)) in self.top_rust.iter().enumerate() {
+            let code = Self::get_code(self, purl).await?;
+            let mut file =
+                File::create(&format!("solutions/{}/top{i}-{time}-{len}.rs", self.pno)).await?;
+            file.write_all(code.as_bytes()).await?;
+        }
+        // creates all the top time files
+        println!("writing top time files");
+        for (i, ((time, len), purl)) in self.top_time.iter().enumerate() {
+            let code = Self::get_code(self, purl).await?;
+            let mut file =
+                File::create(&format!("solutions/{}/top{i}-{time}-{len}.cpp", self.pno)).await?;
+            file.write_all(code.as_bytes()).await?;
+        }
         Ok(())
     }
 
-    pub async fn get_code(body: &String) -> Result<String, Box<dyn Error>> {
-        todo!()
+    pub async fn get_code(&self, url: &String) -> Result<String, Box<dyn Error>> {
+        let body = self.client.get(url).send().await?.text().await?;
+        let fragment = Html::parse_document(&body);
+        let selector = Selector::parse("pre").unwrap();
+        let code = fragment
+            .select(&selector)
+            .next()
+            .unwrap()
+            .inner_html()
+            .replace("&lt;", "<")
+            .replace("&gt;", ">");
+        // this above two replace methods takes up a lot of time
+        Ok(code)
     }
 }

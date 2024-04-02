@@ -21,7 +21,7 @@ document.cookie
 ```
 
 # How to scrape for best solutions?
-- Go to your preferred problem url. Copy the `4` digit number present in the url.
+- Go to your preferred problem url. Copy the `4` digit number (problem rating) present in the url.
 - Clone the repository
 ```
 git clone --depth=1 https://github.com/sumit-ftr/cses-problem-set.git
@@ -32,6 +32,6 @@ cd scrape
 ```
 - Run scrape
 ```
-cargo run --release <number>
+cargo run --release <problem_rating>
 ```
 

@@ -7,9 +7,9 @@ use std::error::Error;
 use tokio::{self, fs::File, io::AsyncWriteExt};
 
 pub struct Config {
-    url: String,   // hacking base url
-    rating: usize, // problem number
-    rng: usize,    // range of web pages of the problem
+    url: String,     // hacking base url
+    dirname: String, // problem number + problem name
+    rng: usize,      // range of web pages of the problem
     client: Client,
     top_rust: BTreeMap<(u8, u16), String>,
     top_time: BTreeMap<(u8, u16), String>,
@@ -38,12 +38,13 @@ impl Config {
 
         let mut top_rust = BTreeMap::<(u8, u16), String>::new();
         let mut top_time = BTreeMap::<(u8, u16), String>::new();
-        let rng = Self::get_range(&client, &url, &mut top_rust, &mut top_time).await?;
+        let (rng, dirname) =
+            Self::get_range(&client, &url, &mut top_rust, &mut top_time, rating).await?;
         url.push_str("12/");
 
         Ok(Self {
             url,
-            rating,
+            dirname,
             rng,
             client,
             top_rust,
@@ -85,12 +86,22 @@ impl Config {
         url: &str,
         top_rust: &mut BTreeMap<(u8, u16), String>,
         top_time: &mut BTreeMap<(u8, u16), String>,
-    ) -> Result<usize, Box<dyn Error>> {
+        rating: usize,
+    ) -> Result<(usize, String), Box<dyn Error>> {
         let res_body = client.get(url).send().await?.text().await?;
         let fragment = Html::parse_fragment(&res_body);
         // takes the response body and gets the fastest solutions
         Self::get_fastest_by_page(&res_body, top_rust, top_time).await?;
         println!("parsed 1st page successfully");
+
+        let dirname = format!(
+            "{rating}-{}",
+            fragment
+                .select(&Selector::parse("h1").unwrap())
+                .next()
+                .unwrap()
+                .inner_html()
+        );
 
         let rng = fragment
             .select(&Selector::parse("a").unwrap())
@@ -100,7 +111,7 @@ impl Config {
             .parse::<usize>()
             .unwrap();
 
-        Ok(rng)
+        Ok((rng, dirname))
     }
 
     pub async fn get_fastest_by_page(
@@ -175,9 +186,9 @@ impl Config {
         // this method is computed separately because in case something happens
         // and the user couldn't able to get the solutions, in that case the user
         // can get all the solutions without scraping all the solution webpages
-        tokio::fs::create_dir_all(format!("solutions/{}/", self.rating)).await?;
-        let mut ftrs = File::create(&format!("solutions/{}/top_rust.json", self.rating)).await?;
-        let mut fttm = File::create(&format!("solutions/{}/top_time.json", self.rating)).await?;
+        tokio::fs::create_dir_all(format!("solutions/{}/", self.dirname)).await?;
+        let mut ftrs = File::create(&format!("solutions/{}/top_rust.json", self.dirname)).await?;
+        let mut fttm = File::create(&format!("solutions/{}/top_time.json", self.dirname)).await?;
 
         // creating new vectors of SolnEntry to Serialize to a proper type
         #[derive(serde::Serialize)]
@@ -220,8 +231,11 @@ impl Config {
         println!("writing top rust files");
         for (i, ((time, len), purl)) in self.top_rust.iter().enumerate() {
             let code = Self::get_code(self, purl).await?;
-            let mut file =
-                File::create(&format!("solutions/{}/top{i}-{time}-{len}.rs", self.rating)).await?;
+            let mut file = File::create(&format!(
+                "solutions/{}/rust{i}-{time}-{len}.rs",
+                self.dirname
+            ))
+            .await?;
             file.write_all(code.as_bytes()).await?;
         }
         // creates all the top time files
@@ -229,8 +243,8 @@ impl Config {
         for (i, ((time, len), purl)) in self.top_time.iter().enumerate() {
             let code = Self::get_code(self, purl).await?;
             let mut file = File::create(&format!(
-                "solutions/{}/top{i}-{time}-{len}.cpp",
-                self.rating
+                "solutions/{}/time{i}-{time}-{len}.cpp",
+                self.dirname
             ))
             .await?;
             file.write_all(code.as_bytes()).await?;
@@ -241,14 +255,14 @@ impl Config {
     pub async fn get_code(&self, url: &String) -> Result<String, Box<dyn Error>> {
         let body = self.client.get(url).send().await?.text().await?;
         let fragment = Html::parse_document(&body);
-        let selector = Selector::parse("pre").unwrap();
         let code = fragment
-            .select(&selector)
+            .select(&Selector::parse("pre").unwrap())
             .next()
             .unwrap()
             .inner_html()
             .replace("&lt;", "<")
-            .replace("&gt;", ">");
+            .replace("&gt;", ">")
+            .replace("&amp;", "&");
         // this above two replace methods takes up a lot of time
         Ok(code)
     }

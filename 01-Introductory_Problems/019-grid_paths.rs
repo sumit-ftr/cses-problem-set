@@ -7,14 +7,14 @@ i: usize, j: usize, n: usize, paths: &mut usize) {
                 || (1<=i && i<n-1 && 1<=j && j<n-1 && vis[i+1][j] && vis[i-1][j] && !vis[i][j+1] && !vis[i][j-1])
                 || (1<=i && i<n-1 && 1<=j && j<n-1 && vis[i][j+1] && vis[i][j-1] && !vis[i+1][j] && !vis[i-1][j]);
     if hitNdivide { return; }
-
+ 
     if i==n-1 && j==0 {
         if steps == v.len() {
             *paths += 1;
         }
         return;
     }
-
+ 
     vis[i][j] = true;
     if v[steps] == '?' as u8 {
         if j+1<n && !vis[i][j+1] {
@@ -49,49 +49,44 @@ i: usize, j: usize, n: usize, paths: &mut usize) {
     vis[i][j] = false;
     return;
 }
-
+ 
+#[allow(non_upper_case_globals)]
 fn main() {
-    let mut token = Tokenizer::new();
-    let n: usize = 7;
+    let mut token = Scanner::new(std::io::stdin().lock());
+    const n: usize = 7;
     let v: Vec<u8> = token.next::<String>().into();
-    let mut vis: Vec<Vec<bool>> = vec![vec![false; n]; n];
-    let mut paths: usize = 0;
+    let mut vis = vec![vec![false; n]; n];
+    let mut paths = 0usize;
     find_paths(&v, 0, &mut vis, 0, 0, n, &mut paths);
     println!("{paths}");
 }
-
-struct Tokenizer {
-    buf: Vec<String>,
-    i: usize
+ 
+pub struct Scanner<R> {
+    reader: R,
+    buffer: Vec<u8>,
+    iter: std::str::SplitAsciiWhitespace<'static>,
 }
-
-impl Tokenizer {
-    pub fn new() -> Self {
-        return Tokenizer { buf: Vec::<String>::new(), i: 0 };
-    }
-
-    fn read_line(&mut self) {
-        let mut s = String::new();
-        std::io::stdin().read_line(&mut s).unwrap();
-        self.buf = s.split_whitespace().map(str::to_string).collect();
-        self.i = 0;
-    }
-
-    pub fn next<T : std::str::FromStr>(&mut self) -> T
-    where T::Err : std::fmt::Debug {
-        while self.i == self.buf.len() {
-            self.read_line();
+ 
+impl<R: std::io::BufRead> Scanner<R> {
+    pub fn new(reader: R) -> Self {
+        Self {
+            reader,
+            buffer: vec![],
+            iter: "".split_ascii_whitespace(),
         }
-        let t = self.buf[self.i].parse().unwrap();
-        self.i += 1;
-        return t;
     }
-
-    #[allow(dead_code)]
-    pub fn next_line(&self) -> String {
-        let mut s = String::new();
-        std::io::stdin().read_line(&mut s).unwrap();
-        return s;
+ 
+    pub fn next<T: std::str::FromStr>(&mut self) -> T {
+        loop {
+            if let Some(token) = self.iter.next() {
+                return unsafe { token.parse().unwrap_unchecked() };
+            }
+            self.buffer.clear();
+            self.reader.read_until(b'\n', &mut self.buffer).unwrap();
+            self.iter = unsafe {
+                let slice = std::str::from_utf8_unchecked(&self.buffer);
+                std::mem::transmute(slice.split_ascii_whitespace())
+            }
+        }
     }
 }
-

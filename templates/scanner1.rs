@@ -1,37 +1,36 @@
 use std::io::Write;
 
 fn main() {
-    let mut sc = Scanner::new(std::io::stdin().lock());
-    let mut op = std::io::BufWriter::new(std::io::stdout().lock());
+    let mut token = Scanner::new(std::io::stdin().lock());
+    let mut out = std::io::BufWriter::new(std::io::stdout().lock());
 }
 
-pub struct Scanner<'a> {
-    #[allow(dead_code)]
-    buf_str: Vec<u8>,
-    buf_iter: std::str::SplitAsciiWhitespace<'a>,
+pub struct Scanner<R> {
+    reader: R,
+    buffer: Vec<u8>,
+    iter: std::str::SplitAsciiWhitespace<'static>,
 }
 
-impl Scanner<'_> {
-    pub fn new<R: std::io::Read>(mut reader: R) -> Self {
-        let mut buf_str = vec![];
-        unsafe {
-            reader.read_to_end(&mut buf_str).unwrap_unchecked();
+impl<R: std::io::BufRead> Scanner<R> {
+    pub fn new(reader: R) -> Self {
+        Self {
+            reader,
+            buffer: vec![],
+            iter: "".split_ascii_whitespace(),
         }
-        let buf_iter = unsafe {
-            let slice = std::str::from_utf8_unchecked(&buf_str);
-            std::mem::transmute(slice.split_ascii_whitespace())
-        };
-
-        Self { buf_str, buf_iter }
     }
 
     pub fn next<T: std::str::FromStr>(&mut self) -> T {
-        unsafe {
-            self.buf_iter
-                .next()
-                .unwrap_unchecked()
-                .parse()
-                .unwrap_unchecked()
+        loop {
+            if let Some(token) = self.iter.next() {
+                return unsafe { token.parse().unwrap_unchecked() };
+            }
+            self.buffer.clear();
+            self.reader.read_until(b'\n', &mut self.buffer).unwrap();
+            self.iter = unsafe {
+                let slice = std::str::from_utf8_unchecked(&self.buffer);
+                std::mem::transmute(slice.split_ascii_whitespace())
+            }
         }
     }
 }

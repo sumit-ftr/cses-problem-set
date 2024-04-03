@@ -1,3 +1,5 @@
+use std::io::Write;
+
 fn divide(v: &[u32], i: usize, s1: u64, s2: u64, mid: u64) -> u64 {
     if i == v.len() {
         if s1 > s2 {
@@ -7,8 +9,8 @@ fn divide(v: &[u32], i: usize, s1: u64, s2: u64, mid: u64) -> u64 {
         }
     }
 
-    let mut d1: u64 = u64::MAX;
-    let mut d2: u64 = u64::MAX;
+    let mut d1 = u64::MAX;
+    let mut d2 = u64::MAX;
     if s1 < mid {
         d1 = u64::min(d1, divide(v, i + 1, s1 + v[i] as u64, s2, mid));
     }
@@ -19,60 +21,49 @@ fn divide(v: &[u32], i: usize, s1: u64, s2: u64, mid: u64) -> u64 {
 }
 
 fn main() {
-    let mut token = Tokenizer::new();
-    let n: usize = token.next();
-    let mut v: Vec<u32> = Vec::with_capacity(n);
-    let mut sum: u64 = 0;
+    let mut token = Scanner::new(std::io::stdin().lock());
+    let mut out = std::io::BufWriter::new(std::io::stdout().lock());
+    let n = token.next::<usize>();
+    let mut v = Vec::<u32>::with_capacity(n);
+    let mut sum = 0u64;
     for i in 0..n {
         v.push(token.next());
         sum += v[i] as u64;
     }
 
     if n == 1 {
-        println!("{}", v[0]);
+        writeln!(out, "{}", v[0]).unwrap();
     } else {
-        // let diff: u64 = divide(&v, 0, 0, 0, sum.div_ceil(2));
-        let diff: u64 = divide(&v, 0, 0, 0, (sum + 1) / 2);
-        println!("{diff}");
+        writeln!(out, "{}", divide(&v, 0, 0, 0, (sum + 1) / 2)).unwrap();
     }
 }
 
-struct Tokenizer {
-    buf: Vec<String>,
-    i: usize,
+pub struct Scanner<R> {
+    reader: R,
+    buffer: Vec<u8>,
+    iter: std::str::SplitAsciiWhitespace<'static>,
 }
 
-impl Tokenizer {
-    pub fn new() -> Self {
-        return Tokenizer {
-            buf: Vec::<String>::new(),
-            i: 0,
-        };
-    }
-
-    fn read_line(&mut self) {
-        let mut s = String::new();
-        std::io::stdin().read_line(&mut s).unwrap();
-        self.buf = s.split_whitespace().map(str::to_string).collect();
-        self.i = 0;
-    }
-
-    pub fn next<T: std::str::FromStr>(&mut self) -> T
-    where
-        T::Err: std::fmt::Debug,
-    {
-        while self.i == self.buf.len() {
-            self.read_line();
+impl<R: std::io::BufRead> Scanner<R> {
+    pub fn new(reader: R) -> Self {
+        Self {
+            reader,
+            buffer: vec![],
+            iter: "".split_ascii_whitespace(),
         }
-        let t = self.buf[self.i].parse().unwrap();
-        self.i += 1;
-        return t;
     }
 
-    #[allow(dead_code)]
-    pub fn next_line(&self) -> String {
-        let mut s = String::new();
-        std::io::stdin().read_line(&mut s).unwrap();
-        return s;
+    pub fn next<T: std::str::FromStr>(&mut self) -> T {
+        loop {
+            if let Some(token) = self.iter.next() {
+                return unsafe { token.parse().unwrap_unchecked() };
+            }
+            self.buffer.clear();
+            self.reader.read_until(b'\n', &mut self.buffer).unwrap();
+            self.iter = unsafe {
+                let slice = std::str::from_utf8_unchecked(&self.buffer);
+                std::mem::transmute(slice.split_ascii_whitespace())
+            }
+        }
     }
 }

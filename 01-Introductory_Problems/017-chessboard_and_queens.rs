@@ -1,10 +1,12 @@
+use std::io::Write;
+
 fn nqueen_variant(
-    v: &Vec<Vec<u8>>,
+    v: &[Vec<u8>],
     row: usize,
     sum: &mut usize,
-    c: &mut Vec<u8>,
-    ld: &mut Vec<u8>,
-    rd: &mut Vec<u8>,
+    c: &mut [u8],
+    ld: &mut [u8],
+    rd: &mut [u8],
 ) {
     if row == v.len() {
         *sum += 1;
@@ -26,17 +28,19 @@ fn nqueen_variant(
     return;
 }
 
+#[allow(non_upper_case_globals)]
 fn main() {
-    let mut token = Tokenizer::new();
-    let n: usize = 8;
-    let mut v: Vec<Vec<u8>> = vec![Vec::with_capacity(n); n];
-    let mut c: Vec<u8> = vec![0; n];
-    let mut ld: Vec<u8> = vec![0; 2 * n - 1];
-    let mut rd: Vec<u8> = vec![0; 2 * n - 1];
-    let mut sum: usize = 0;
+    let mut token = Scanner::new(std::io::stdin().lock());
+    let mut out = std::io::BufWriter::new(std::io::stdout().lock());
+    const n: usize = 8;
+    let mut v = vec![Vec::<u8>::with_capacity(n); n];
+    let mut c = vec![0u8; n];
+    let mut ld = vec![0u8; 2 * n - 1];
+    let mut rd = vec![0u8; 2 * n - 1];
+    let mut sum = 0usize;
     // 0 for free , 1 for queens , 2 for reserved
     for i in 0..n {
-        let s: String = token.next();
+        let s = token.next::<String>();
         for ch in s.chars() {
             if ch == '.' {
                 v[i].push(0);
@@ -47,70 +51,58 @@ fn main() {
     }
 
     nqueen_variant(&v, 0, &mut sum, &mut c, &mut ld, &mut rd);
-    println!("{sum}");
+    writeln!(out, "{sum}").unwrap();
 }
 
-/*
-fn is_safe(v: &Vec<Vec<u8>>, i: usize, j: usize) -> bool {
-    let m = usize::min(i, j);
-    for k in 0..v.len() {
-        // horizontal and vertical check
-        if v[k][j] == 2 || v[i][k] == 2 {
-            return false;
+// fn is_safe(v: &Vec<Vec<u8>>, i: usize, j: usize) -> bool {
+//     let m = usize::min(i, j);
+//     for k in 0..v.len() {
+//         // horizontal and vertical check
+//         if v[k][j] == 2 || v[i][k] == 2 {
+//             return false;
+//         }
+//         // left diagonal (\) check
+//         if i-m+k < v.len() && j-m+k < v.len() {
+//             if v[i-m+k][j-m+k] == 2 {
+//                 return false;
+//             }
+//         }
+//         // right diagonal (/) check
+//         if i > k && j+k < v.len() {
+//             if v[i-k][j+k] == 2 {
+//                 return false;
+//             }
+//         }
+//     }
+//     return true;
+// }
+
+pub struct Scanner<R> {
+    reader: R,
+    buffer: Vec<u8>,
+    iter: std::str::SplitAsciiWhitespace<'static>,
+}
+
+impl<R: std::io::BufRead> Scanner<R> {
+    pub fn new(reader: R) -> Self {
+        Self {
+            reader,
+            buffer: vec![],
+            iter: "".split_ascii_whitespace(),
         }
-        // left diagonal (\) check
-        if i-m+k < v.len() && j-m+k < v.len() {
-            if v[i-m+k][j-m+k] == 2 {
-                return false;
+    }
+
+    pub fn next<T: std::str::FromStr>(&mut self) -> T {
+        loop {
+            if let Some(token) = self.iter.next() {
+                return unsafe { token.parse().unwrap_unchecked() };
+            }
+            self.buffer.clear();
+            self.reader.read_until(b'\n', &mut self.buffer).unwrap();
+            self.iter = unsafe {
+                let slice = std::str::from_utf8_unchecked(&self.buffer);
+                std::mem::transmute(slice.split_ascii_whitespace())
             }
         }
-        // right diagonal (/) check
-        if i > k && j+k < v.len() {
-            if v[i-k][j+k] == 2 {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-*/
-
-struct Tokenizer {
-    buf: Vec<String>,
-    i: usize,
-}
-
-impl Tokenizer {
-    pub fn new() -> Self {
-        return Tokenizer {
-            buf: Vec::<String>::new(),
-            i: 0,
-        };
-    }
-
-    fn read_line(&mut self) {
-        let mut s = String::new();
-        std::io::stdin().read_line(&mut s).unwrap();
-        self.buf = s.split_whitespace().map(str::to_string).collect();
-        self.i = 0;
-    }
-
-    pub fn next<T: std::str::FromStr>(&mut self) -> T
-    where
-        T::Err: std::fmt::Debug,
-    {
-        while self.i == self.buf.len() {
-            self.read_line();
-        }
-        let t = self.buf[self.i].parse().unwrap();
-        self.i += 1;
-        return t;
-    }
-
-    #[allow(dead_code)]
-    pub fn next_line(&self) -> String {
-        let mut s = String::new();
-        std::io::stdin().read_line(&mut s).unwrap();
-        return s;
     }
 }

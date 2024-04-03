@@ -45,7 +45,7 @@ impl<R: std::io::BufRead> Scanner<R> {
     pub fn next<T: std::str::FromStr>(&mut self) -> T {
         loop {
             if let Some(token) = self.iter.next() {
-                return token.parse().ok().unwrap();
+                return unsafe { token.parse().unwrap_unchecked() };
             }
             self.buffer.clear();
             self.reader.read_until(b'\n', &mut self.buffer).unwrap();

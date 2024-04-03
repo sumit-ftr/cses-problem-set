@@ -1,59 +1,52 @@
-fn tower_of_hanoi(n: u8, start: u8, end: u8) {
+use std::io::{BufWriter, StdoutLock, Write};
+
+fn tower_of_hanoi(n: u8, start: u8, end: u8, out: &mut BufWriter<StdoutLock<'_>>) {
     if n == 1 {
-        println!("{start} {end}");
+        writeln!(out, "{start} {end}").unwrap();
         return;
     }
 
     let other: u8 = 6 - (start + end);
-    tower_of_hanoi(n - 1, start, other);
-    println!("{start} {end}");
-    tower_of_hanoi(n - 1, other, end);
+    tower_of_hanoi(n - 1, start, other, out);
+    writeln!(out, "{start} {end}").unwrap();
+    tower_of_hanoi(n - 1, other, end, out);
 }
 
 fn main() {
-    let mut token = Tokenizer::new();
-    let n: u8 = token.next();
-    let moves: u32 = u32::pow(2, n as u32) - 1;
-    println!("{moves}");
-    tower_of_hanoi(n, 1, 3);
+    let mut token = Scanner::new(std::io::stdin().lock());
+    let mut out = std::io::BufWriter::new(std::io::stdout().lock());
+    let n = token.next::<u8>();
+    let moves = u32::pow(2, n as u32) - 1;
+    writeln!(out, "{moves}").unwrap();
+    tower_of_hanoi(n, 1, 3, &mut out);
 }
 
-struct Tokenizer {
-    buf: Vec<String>,
-    i: usize,
+pub struct Scanner<R> {
+    reader: R,
+    buffer: Vec<u8>,
+    iter: std::str::SplitAsciiWhitespace<'static>,
 }
 
-impl Tokenizer {
-    pub fn new() -> Self {
-        return Tokenizer {
-            buf: Vec::<String>::new(),
-            i: 0,
-        };
-    }
-
-    fn read_line(&mut self) {
-        let mut s = String::new();
-        std::io::stdin().read_line(&mut s).unwrap();
-        self.buf = s.split_whitespace().map(str::to_string).collect();
-        self.i = 0;
-    }
-
-    pub fn next<T: std::str::FromStr>(&mut self) -> T
-    where
-        T::Err: std::fmt::Debug,
-    {
-        while self.i == self.buf.len() {
-            self.read_line();
+impl<R: std::io::BufRead> Scanner<R> {
+    pub fn new(reader: R) -> Self {
+        Self {
+            reader,
+            buffer: vec![],
+            iter: "".split_ascii_whitespace(),
         }
-        let t = self.buf[self.i].parse().unwrap();
-        self.i += 1;
-        return t;
     }
 
-    #[allow(dead_code)]
-    pub fn next_line(&self) -> String {
-        let mut s = String::new();
-        std::io::stdin().read_line(&mut s).unwrap();
-        return s;
+    pub fn next<T: std::str::FromStr>(&mut self) -> T {
+        loop {
+            if let Some(token) = self.iter.next() {
+                return unsafe { token.parse().unwrap_unchecked() };
+            }
+            self.buffer.clear();
+            self.reader.read_until(b'\n', &mut self.buffer).unwrap();
+            self.iter = unsafe {
+                let slice = std::str::from_utf8_unchecked(&self.buffer);
+                std::mem::transmute(slice.split_ascii_whitespace())
+            }
+        }
     }
 }

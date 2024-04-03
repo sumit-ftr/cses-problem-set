@@ -1,11 +1,13 @@
+use std::io::{BufWriter, StdoutLock, Write};
+
 struct Pair {
     ch: u8,
     count: u8,
 }
 
-fn permute(v: &mut [Pair], s: &mut String, n: usize) {
+fn permute(v: &mut [Pair], s: &mut String, n: usize, out: &mut BufWriter<StdoutLock<'_>>) {
     if n == 0 {
-        println!("{s}");
+        writeln!(out, "{s}").unwrap();
         return;
     }
 
@@ -13,7 +15,7 @@ fn permute(v: &mut [Pair], s: &mut String, n: usize) {
         if v[i].count != 0 {
             s.push(v[i].ch as char);
             v[i].count -= 1;
-            permute(v, s, n - 1);
+            permute(v, s, n - 1, out);
             s.pop();
             v[i].count += 1;
         }
@@ -21,14 +23,15 @@ fn permute(v: &mut [Pair], s: &mut String, n: usize) {
 }
 
 fn main() {
-    let mut token = Tokenizer::new();
-    let s: String = token.next();
-    let mut v: Vec<Pair> = Vec::new();
-    let n: usize = s.len();
-    let mut c: u128 = 1;
+    let mut token = Scanner::new(std::io::stdin().lock());
+    let mut out = std::io::BufWriter::new(std::io::stdout().lock());
+    let s = token.next::<String>();
+    let mut v = Vec::<Pair>::new();
+    let n = s.len();
+    let mut c = 1u128;
 
     // this step eliminates sorting
-    let mut h: Vec<u8> = vec![0; 128];
+    let mut h = vec![0u8; 128];
     for (i, ch) in s.chars().enumerate() {
         c *= i as u128 + 1;
         h[ch as usize] += 1;
@@ -46,48 +49,38 @@ fn main() {
             }
         }
     }
-    std::mem::drop(h);
+    drop(h);
 
-    println!("{c}");
-    permute(&mut v, &mut "".to_string(), n);
+    writeln!(out, "{c}").unwrap();
+    permute(&mut v, &mut "".to_string(), n, &mut out);
 }
 
-struct Tokenizer {
-    buf: Vec<String>,
-    i: usize,
+pub struct Scanner<R> {
+    reader: R,
+    buffer: Vec<u8>,
+    iter: std::str::SplitAsciiWhitespace<'static>,
 }
 
-impl Tokenizer {
-    pub fn new() -> Self {
-        return Tokenizer {
-            buf: Vec::<String>::new(),
-            i: 0,
-        };
-    }
-
-    fn read_line(&mut self) {
-        let mut s = String::new();
-        std::io::stdin().read_line(&mut s).unwrap();
-        self.buf = s.split_whitespace().map(str::to_string).collect();
-        self.i = 0;
-    }
-
-    pub fn next<T: std::str::FromStr>(&mut self) -> T
-    where
-        T::Err: std::fmt::Debug,
-    {
-        while self.i == self.buf.len() {
-            self.read_line();
+impl<R: std::io::BufRead> Scanner<R> {
+    pub fn new(reader: R) -> Self {
+        Self {
+            reader,
+            buffer: vec![],
+            iter: "".split_ascii_whitespace(),
         }
-        let t = self.buf[self.i].parse().unwrap();
-        self.i += 1;
-        return t;
     }
 
-    #[allow(dead_code)]
-    pub fn next_line(&self) -> String {
-        let mut s = String::new();
-        std::io::stdin().read_line(&mut s).unwrap();
-        return s;
+    pub fn next<T: std::str::FromStr>(&mut self) -> T {
+        loop {
+            if let Some(token) = self.iter.next() {
+                return unsafe { token.parse().unwrap_unchecked() };
+            }
+            self.buffer.clear();
+            self.reader.read_until(b'\n', &mut self.buffer).unwrap();
+            self.iter = unsafe {
+                let slice = std::str::from_utf8_unchecked(&self.buffer);
+                std::mem::transmute(slice.split_ascii_whitespace())
+            }
+        }
     }
 }

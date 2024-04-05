@@ -101,6 +101,7 @@ impl Config {
                 .next()
                 .unwrap()
                 .inner_html()
+                .replace(" ", "_")
         );
 
         let rng = fragment
@@ -232,7 +233,7 @@ impl Config {
         for (i, ((time, len), purl)) in self.top_rust.iter().enumerate() {
             let code = Self::get_code(self, purl).await?;
             let mut file = File::create(&format!(
-                "solutions/{}/rust{i}-{time}-{len}.rs",
+                "solutions/{}/rust{i:03}-{time:02}-{len:05}.rs",
                 self.dirname
             ))
             .await?;
@@ -243,7 +244,7 @@ impl Config {
         for (i, ((time, len), purl)) in self.top_time.iter().enumerate() {
             let code = Self::get_code(self, purl).await?;
             let mut file = File::create(&format!(
-                "solutions/{}/time{i}-{time}-{len}.cpp",
+                "solutions/{}/time{i:02}-{time:02}-{len:05}.cpp",
                 self.dirname
             ))
             .await?;

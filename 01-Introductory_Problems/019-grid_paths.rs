@@ -7,14 +7,14 @@ i: usize, j: usize, n: usize, paths: &mut usize) {
                 || (1<=i && i<n-1 && 1<=j && j<n-1 && vis[i+1][j] && vis[i-1][j] && !vis[i][j+1] && !vis[i][j-1])
                 || (1<=i && i<n-1 && 1<=j && j<n-1 && vis[i][j+1] && vis[i][j-1] && !vis[i+1][j] && !vis[i-1][j]);
     if hitNdivide { return; }
- 
+
     if i==n-1 && j==0 {
         if steps == v.len() {
             *paths += 1;
         }
         return;
     }
- 
+
     vis[i][j] = true;
     if v[steps] == '?' as u8 {
         if j+1<n && !vis[i][j+1] {
@@ -49,7 +49,7 @@ i: usize, j: usize, n: usize, paths: &mut usize) {
     vis[i][j] = false;
     return;
 }
- 
+
 #[allow(non_upper_case_globals)]
 fn main() {
     let mut token = Scanner::new(std::io::stdin().lock());
@@ -60,13 +60,13 @@ fn main() {
     find_paths(&v, 0, &mut vis, 0, 0, n, &mut paths);
     println!("{paths}");
 }
- 
+
 pub struct Scanner<R> {
     reader: R,
     buffer: Vec<u8>,
     iter: std::str::SplitAsciiWhitespace<'static>,
 }
- 
+
 impl<R: std::io::BufRead> Scanner<R> {
     pub fn new(reader: R) -> Self {
         Self {
@@ -75,7 +75,7 @@ impl<R: std::io::BufRead> Scanner<R> {
             iter: "".split_ascii_whitespace(),
         }
     }
- 
+
     pub fn next<T: std::str::FromStr>(&mut self) -> T {
         loop {
             if let Some(token) = self.iter.next() {

@@ -1,19 +1,5 @@
 use std::io::Write;
 
-// fn bin_search(coins: &[u32], x: u32) -> usize {
-//     let mut lb = 0usize;
-//     let mut ub = coins.len() - 1;
-//     while lb < ub {
-//         let mid = (lb + ub) >> 1;
-//         if x <= coins[mid] {
-//             ub = mid;
-//         } else {
-//             lb = mid + 1;
-//         }
-//     }
-//     return ub;
-// }
-
 fn main() {
     let mut token = Scanner::new(std::io::stdin().lock());
     let mut out = std::io::BufWriter::new(std::io::stdout().lock());
@@ -34,7 +20,10 @@ fn main() {
     for i in 1..=x {
         let mut j = 0usize;
         while j < n && i >= coins[j] as usize {
-            dp[i] = u32::min(dp[i], dp[i - coins[j] as usize] + 1);
+            let child = dp[i - coins[j] as usize];
+            if child != u32::MAX {
+                dp[i] = u32::min(dp[i], child + 1);
+            }
             j += 1;
         }
     }

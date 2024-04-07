@@ -6,11 +6,11 @@ fn main() {
     let n = token.next::<usize>();
     let x = token.next::<usize>();
     let mut coins = Vec::<u32>::with_capacity(n);
-    let mut dp = vec![u32::MAX; x + 1];
+    let mut dp = vec![1000001; x + 1];
     for _ in 0..n {
         let c = token.next::<u32>();
-        coins.push(c);
         if c as usize <= x {
+            coins.push(c);
             dp[c as usize] = 1;
         }
     }
@@ -19,15 +19,12 @@ fn main() {
     dp[0] = 0;
     for i in 1..=x {
         let mut j = 0usize;
-        while j < n && i >= coins[j] as usize {
-            let child = dp[i - coins[j] as usize];
-            if child != u32::MAX {
-                dp[i] = u32::min(dp[i], child + 1);
-            }
+        while j < coins.len() && i >= coins[j] as usize {
+            dp[i] = u32::min(dp[i], dp[i - coins[j] as usize] + 1);
             j += 1;
         }
     }
-    writeln!(out, "{}", if dp[x] == u32::MAX { -1 } else { dp[x] as i64 }).unwrap();
+    writeln!(out, "{}", if dp[x] == 1000001 { -1 } else { dp[x] as i64 }).unwrap();
 }
 
 pub struct Scanner<R> {

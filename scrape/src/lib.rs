@@ -2,14 +2,13 @@ use reqwest::{self, cookie::Jar, Client, Url};
 use scraper::{Html, Selector};
 use serde;
 use serde_json;
-use std::collections::BTreeMap;
-use std::error::Error;
+use std::{collections::BTreeMap, error::Error, sync::Arc};
 use tokio::{self, fs::File, io::AsyncWriteExt};
 
 pub struct Config {
-    url: String,     // hacking base url
-    dirname: String, // problem number + problem name
-    rng: usize,      // range of web pages of the problem
+    url: String,             // hacking base url
+    rating: usize,           // problem rating
+    dirname: Option<String>, // problem number + problem name
     client: Client,
     top_rust: BTreeMap<(u8, u16), String>,
     top_time: BTreeMap<(u8, u16), String>,
@@ -19,10 +18,13 @@ impl Config {
     pub async fn new(mut a: std::env::Args) -> Result<Self, Box<dyn Error>> {
         a.next();
         // matching first argument (problem rating)
-        let (rating, mut url) = match a.next() {
+        let (rating, url) = match a.next() {
             Some(num) => {
-                let num = num.parse::<usize>()?;
-                (num, format!("https://cses.fi/problemset/hack/{num}/list/"))
+                let rating = num.parse::<usize>()?;
+                (
+                    rating,
+                    format!("https://cses.fi/problemset/queue/{rating}/"),
+                )
             }
             None => return Err(Box::<dyn Error>::from("Error: Problem Number Not Found")),
         };
@@ -36,19 +38,13 @@ impl Config {
             .cookie_provider(std::sync::Arc::new(jar))
             .build()?;
 
-        let mut top_rust = BTreeMap::<(u8, u16), String>::new();
-        let mut top_time = BTreeMap::<(u8, u16), String>::new();
-        let (rng, dirname) =
-            Self::get_range(&client, &url, &mut top_rust, &mut top_time, rating).await?;
-        url.push_str("12/");
-
         Ok(Self {
             url,
-            dirname,
-            rng,
+            dirname: None,
+            rating,
             client,
-            top_rust,
-            top_time,
+            top_rust: BTreeMap::<(u8, u16), String>::new(),
+            top_time: BTreeMap::<(u8, u16), String>::new(),
         })
     }
 
@@ -78,60 +74,28 @@ impl Config {
             .send()
             .await?;
 
+        println!("Authentication complete!");
+
         Ok(())
     }
 
-    pub async fn get_range(
-        client: &Client,
-        url: &str,
-        top_rust: &mut BTreeMap<(u8, u16), String>,
-        top_time: &mut BTreeMap<(u8, u16), String>,
-        rating: usize,
-    ) -> Result<(usize, String), Box<dyn Error>> {
-        let res_body = client.get(url).send().await?.text().await?;
-        let fragment = Html::parse_fragment(&res_body);
-        // takes the response body and gets the fastest solutions
-        Self::get_fastest_by_page(&res_body, top_rust, top_time).await?;
-        println!("parsed 1st page successfully");
-
-        let dirname = format!(
-            "{rating}-{}",
-            fragment
-                .select(&Selector::parse("h1").unwrap())
-                .next()
-                .unwrap()
-                .inner_html()
-                .replace(" ", "_")
-        );
-
-        let rng = fragment
-            .select(&Selector::parse("a").unwrap())
-            .nth(17)
-            .unwrap()
-            .inner_html()
-            .parse::<usize>()
-            .unwrap();
-
-        Ok((rng, dirname))
-    }
-
-    pub async fn get_fastest_by_page(
+    pub fn get_fastest_by_page(
         res_body: &String,
         top_rust: &mut BTreeMap<(u8, u16), String>,
         top_time: &mut BTreeMap<(u8, u16), String>,
     ) -> Result<(), Box<dyn Error>> {
-        let fragment = Html::parse_fragment(res_body);
+        let document = Html::parse_document(res_body);
 
         // updating the BTreeMaps
         let selector = Selector::parse("td").unwrap();
-        let mut submissions = fragment.select(&selector);
+        let mut submissions = document.select(&selector);
         while let Some(_) = submissions.next() {
             submissions.next();
             // finding values from the html
             let lang = submissions.next().unwrap().inner_html();
             let time = submissions.next().unwrap().inner_html();
             let chr_cnt = submissions.next().unwrap().inner_html();
-            let endpoint = Html::parse_fragment(&submissions.next().unwrap().inner_html());
+            let endpoint = Html::parse_document(&submissions.next().unwrap().inner_html());
             // computing the key & values of the BTreeMaps
             let time = (time[..time.len() - 2].parse::<f64>().unwrap() * 100.0) as u8;
             let len = chr_cnt[..chr_cnt.len() - 4].parse::<usize>().unwrap() as u16;
@@ -158,7 +122,47 @@ impl Config {
     }
 
     pub async fn get_fastest(&mut self) -> Result<(), Box<dyn Error>> {
-        for i in 2..=self.rng {
+        let res_body = self
+            .client
+            .get(format!("{}1", self.url))
+            .send()
+            .await?
+            .text()
+            .await?;
+
+        // takes the response body and gets the fastest solutions
+        Self::get_fastest_by_page(&res_body, &mut self.top_rust, &mut self.top_time)?;
+        println!("parsed 1st page successfully");
+
+        let document = Html::parse_document(&res_body);
+        self.dirname = Some(format!(
+            "{}-{}",
+            self.rating,
+            document
+                .select(&Selector::parse("h1").unwrap())
+                .next()
+                .unwrap()
+                .inner_html()
+                .replace(" ", "_")
+        ));
+
+        println!("{document:#?}\n");
+        let hello = document
+            .select(&Selector::parse("a").unwrap())
+            .nth(17)
+            .unwrap();
+
+        let rng = hello.inner_html().parse::<usize>().unwrap();
+
+        // let rng = document
+        //     .select(&Selector::parse("a").unwrap())
+        //     .nth(17)
+        //     .unwrap()
+        //     .inner_html()
+        //     .parse::<usize>()
+        //     .unwrap();
+
+        for i in 2..=rng {
             let body = self
                 .client
                 .get(format!("{}{i}", self.url))
@@ -167,18 +171,16 @@ impl Config {
                 .text()
                 .await?;
             // takes the response body and gets the fastest solutions
-            if let Err(e) =
-                Self::get_fastest_by_page(&body, &mut self.top_rust, &mut self.top_time).await
-            {
-                println!("Error: {e}");
-                if let Ok(_) = self.authenticate().await {
-                    Self::get_fastest_by_page(&body, &mut self.top_rust, &mut self.top_time)
-                        .await?;
-                }
-                // since authenticate takes time we will create json in mean time
-                self.create_json().await?;
-            }
+            Self::get_fastest_by_page(&body, &mut self.top_rust, &mut self.top_time)?;
             println!("parsed {i}th page successfully");
+
+            // if let Err(e) = Self::get_fastest_by_page(&body, &mut self.top_rust, &mut self.top_time)
+            // {
+            //     println!("Error: {e}");
+            //     if let Ok(_) = self.authenticate().await {
+            //         Self::get_fastest_by_page(&body, &mut self.top_rust, &mut self.top_time)?;
+            //     }
+            // }
         }
         Ok(())
     }
@@ -187,9 +189,10 @@ impl Config {
         // this method is computed separately because in case something happens
         // and the user couldn't able to get the solutions, in that case the user
         // can get all the solutions without scraping all the solution webpages
-        tokio::fs::create_dir_all(format!("solutions/{}/", self.dirname)).await?;
-        let mut ftrs = File::create(&format!("solutions/{}/top_rust.json", self.dirname)).await?;
-        let mut fttm = File::create(&format!("solutions/{}/top_time.json", self.dirname)).await?;
+        let dirname = self.dirname.as_ref().unwrap();
+        tokio::fs::create_dir_all(format!("solutions/{dirname}/")).await?;
+        let mut ftrs = File::create(&format!("solutions/{dirname}/top_rust.json")).await?;
+        let mut fttm = File::create(&format!("solutions/{dirname}/top_time.json")).await?;
 
         // creating new vectors of SolnEntry to Serialize to a proper type
         #[derive(serde::Serialize)]
@@ -198,63 +201,74 @@ impl Config {
             chars: u16,
             url: String,
         }
+
         let top_rust_vec = self
             .top_rust
             .clone()
             .into_iter()
             .map(|((time, chars), url)| SolnEntry { time, chars, url })
             .collect::<Vec<SolnEntry>>();
-        let top_time_vec = self
-            .top_time
-            .clone()
-            .into_iter()
-            .map(|((time, chars), url)| SolnEntry { time, chars, url })
-            .collect::<Vec<SolnEntry>>();
-
-        // writing to json files
         ftrs.write_all(
             serde_json::to_string_pretty(&top_rust_vec)
                 .unwrap()
                 .as_bytes(),
         )
         .await?;
+
+        let top_time_vec = self
+            .top_time
+            .clone()
+            .into_iter()
+            .map(|((time, chars), url)| SolnEntry { time, chars, url })
+            .collect::<Vec<SolnEntry>>();
         fttm.write_all(
             serde_json::to_string_pretty(&top_time_vec)
                 .unwrap()
                 .as_bytes(),
         )
         .await?;
+
         Ok(())
     }
 
-    pub async fn write_all_files(&self) -> Result<(), Box<dyn Error>> {
+    pub async fn write_all_files(self) -> Result<(), Box<dyn Error>> {
         // creates all the top rust files
+        let client = Arc::new(self.client);
+        let dirname = Arc::new(self.dirname.unwrap());
         println!("writing top rust files");
-        for (i, ((time, len), purl)) in self.top_rust.iter().enumerate() {
-            let code = Self::get_code(self, purl).await?;
-            let mut file = File::create(&format!(
-                "solutions/{}/rust{i:03}-{time:02}-{len:05}.rs",
-                self.dirname
-            ))
-            .await?;
-            file.write_all(code.as_bytes()).await?;
+        for (i, ((time, len), purl)) in self.top_rust.into_iter().enumerate() {
+            let client = Arc::clone(&client);
+            let dirname = Arc::clone(&dirname);
+            tokio::spawn(async move {
+                let code = Self::get_code(client, purl).await.unwrap();
+                let mut file = File::create(&format!(
+                    "solutions/{dirname}/rust{i:03}-{time:02}-{len:05}.rs",
+                ))
+                .await
+                .unwrap();
+                file.write_all(code.as_bytes()).await.unwrap();
+            });
         }
         // creates all the top time files
         println!("writing top time files");
-        for (i, ((time, len), purl)) in self.top_time.iter().enumerate() {
-            let code = Self::get_code(self, purl).await?;
-            let mut file = File::create(&format!(
-                "solutions/{}/time{i:02}-{time:02}-{len:05}.cpp",
-                self.dirname
-            ))
-            .await?;
-            file.write_all(code.as_bytes()).await?;
+        for (i, ((time, len), purl)) in self.top_time.into_iter().enumerate() {
+            let client = Arc::clone(&client);
+            let dirname = Arc::clone(&dirname);
+            tokio::spawn(async move {
+                let code = Self::get_code(client, purl).await.unwrap();
+                let mut file = File::create(&format!(
+                    "solutions/{dirname}/time{i:02}-{time:02}-{len:05}.cpp",
+                ))
+                .await
+                .unwrap();
+                file.write_all(code.as_bytes()).await.unwrap();
+            });
         }
         Ok(())
     }
 
-    pub async fn get_code(&self, url: &String) -> Result<String, Box<dyn Error>> {
-        let body = self.client.get(url).send().await?.text().await?;
+    pub async fn get_code(client: Arc<Client>, url: String) -> Result<String, Box<dyn Error>> {
+        let body = client.as_ref().get(url).send().await?.text().await?;
         let fragment = Html::parse_document(&body);
         let code = fragment
             .select(&Selector::parse("pre").unwrap())

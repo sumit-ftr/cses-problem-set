@@ -3,7 +3,7 @@
 > ### **`Note: The repository is currently in progress`**
 
 # Contribution
-> **Write solution with this [*template*](https://github.com/sumit-ftr/cses-300/blob/master/template.rs). If you want to use some other template then you can create an issue mentioning your template is faster than this one.**
+> **Write solution with this [*template*](https://github.com/sumit-ftr/cses-300/blob/master/template.rs).
 
 # How to setup scrape?
 #### Put your data accordingly

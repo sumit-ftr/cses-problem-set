@@ -6,9 +6,9 @@ use std::{collections::BTreeMap, error::Error, sync::Arc};
 use tokio::{self, fs::File, io::AsyncWriteExt};
 
 pub struct Config {
-    url: String,             // hacking base url
-    rating: usize,           // problem rating
-    dirname: Option<String>, // problem number + problem name
+    url: String,     // hacking base url
+    rating: usize,   // problem rating
+    dirname: String, // problem number + problem name
     client: Client,
     top_rust: BTreeMap<(u8, u16), String>,
     top_time: BTreeMap<(u8, u16), String>,
@@ -40,7 +40,7 @@ impl Config {
 
         Ok(Self {
             url,
-            dirname: None,
+            dirname: "".to_string(),
             rating,
             client,
             top_rust: BTreeMap::<(u8, u16), String>::new(),
@@ -79,6 +79,7 @@ impl Config {
         Ok(())
     }
 
+    // takes the response body and gets the fastest solutions
     pub fn get_fastest_by_page(
         res_body: &String,
         top_rust: &mut BTreeMap<(u8, u16), String>,
@@ -130,12 +131,11 @@ impl Config {
             .text()
             .await?;
 
-        // takes the response body and gets the fastest solutions
         Self::get_fastest_by_page(&res_body, &mut self.top_rust, &mut self.top_time)?;
         println!("parsed 1st page successfully");
 
         let document = Html::parse_document(&res_body);
-        self.dirname = Some(format!(
+        self.dirname = format!(
             "{}-{}",
             self.rating,
             document
@@ -144,23 +144,22 @@ impl Config {
                 .unwrap()
                 .inner_html()
                 .replace(" ", "_")
-        ));
+        );
 
-        println!("{document:#?}\n");
-        let hello = document
+        // println!("{document:#?}\n");
+        // let selector = Selector::parse("a").unwrap();
+        // let mut hello = document.select(&selector);
+        // println!("{hello:#?}\n");
+        // let hello2 = hello.nth(18).unwrap();
+        // let rng = hello2.inner_html().parse::<usize>().unwrap();
+
+        let rng = document
             .select(&Selector::parse("a").unwrap())
-            .nth(17)
+            .nth(18)
+            .unwrap()
+            .inner_html()
+            .parse::<usize>()
             .unwrap();
-
-        let rng = hello.inner_html().parse::<usize>().unwrap();
-
-        // let rng = document
-        //     .select(&Selector::parse("a").unwrap())
-        //     .nth(17)
-        //     .unwrap()
-        //     .inner_html()
-        //     .parse::<usize>()
-        //     .unwrap();
 
         for i in 2..=rng {
             let body = self
@@ -170,7 +169,7 @@ impl Config {
                 .await?
                 .text()
                 .await?;
-            // takes the response body and gets the fastest solutions
+
             Self::get_fastest_by_page(&body, &mut self.top_rust, &mut self.top_time)?;
             println!("parsed {i}th page successfully");
 
@@ -189,10 +188,9 @@ impl Config {
         // this method is computed separately because in case something happens
         // and the user couldn't able to get the solutions, in that case the user
         // can get all the solutions without scraping all the solution webpages
-        let dirname = self.dirname.as_ref().unwrap();
-        tokio::fs::create_dir_all(format!("solutions/{dirname}/")).await?;
-        let mut ftrs = File::create(&format!("solutions/{dirname}/top_rust.json")).await?;
-        let mut fttm = File::create(&format!("solutions/{dirname}/top_time.json")).await?;
+        tokio::fs::create_dir_all(format!("solutions/{}/", self.dirname)).await?;
+        let mut ftrs = File::create(&format!("solutions/{}/top_rust.json", self.dirname)).await?;
+        let mut fttm = File::create(&format!("solutions/{}/top_time.json", self.dirname)).await?;
 
         // creating new vectors of SolnEntry to Serialize to a proper type
         #[derive(serde::Serialize)]
@@ -234,7 +232,7 @@ impl Config {
     pub async fn write_all_files(self) -> Result<(), Box<dyn Error>> {
         // creates all the top rust files
         let client = Arc::new(self.client);
-        let dirname = Arc::new(self.dirname.unwrap());
+        let dirname = Arc::new(self.dirname);
         println!("writing top rust files");
         for (i, ((time, len), purl)) in self.top_rust.into_iter().enumerate() {
             let client = Arc::clone(&client);
